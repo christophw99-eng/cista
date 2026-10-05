@@ -364,7 +364,7 @@ function wortSatz(name) {
 // Wochenvorlagen der Einheit L. 16: Wochen-Code am Dienstag, Abfrage am Montag „bis“
 const PLAN = [
   { n: 1, ab: '2026-10-06', bis: '2026-10-26', titel: 'Woche 1 + Herbstferien', woerter: 'z1', wtext: 'Vokabeln Z. 1–10', themen: ['p16', 'p15'], wdh: 0,
-    ferien: { bis: '2026-10-25', tage: 7, extra: '15+1-4' } },
+    ferien: { bis: '2026-10-25', tage: 7, extra: '14-15+1-4' } },
   { n: 2, ab: '2026-10-27', bis: '2026-11-02', titel: 'Woche 2', woerter: 'z2', wtext: 'Vokabeln Z. 11–24', themen: ['p16', 'r16'], wdh: 0 },
   { n: 3, ab: '2026-11-03', bis: '2026-11-09', titel: 'Woche 3', woerter: 'alle', wtext: 'alle Wörter L. 16 mit PPP-Stammformen', themen: ['s16', 'r16', 'm16'], wdh: 0 },
   { n: 4, ab: '2026-11-10', bis: '2026-11-16', titel: 'Woche 4', woerter: 'alle', wtext: 'alle Wörter L. 16 + 5 aus früheren Lektionen', themen: ['p16', 'r16', 'm16', 's16'], wdh: 5 },
@@ -524,7 +524,9 @@ let S = null, T = null;
 function ladeS() {
   S = store.get(sKey(), null);
   if (S) { S.box = S.box || {}; S.days = S.days || {}; S.tests = S.tests || {}; }
+  if (S && S.deck && S.deck.ferien) { const p = PLAN.find(x => x.ferien && x.bis === S.deck.week); if (p) S.deck.extra = extraAus(p.ferien.extra); }
 }
+const wdhName = d => d.extra.map(g => g.label).join(' und ');
 function speichereS() { store.set(sKey(), S); }
 function ladeT() { T = store.get('lehrer', null) || { roster: [], results: {}, demo: false }; }
 function speichereT() { store.set('lehrer', T); }
@@ -784,7 +786,7 @@ function ferienKarteHTML(f) {
   return `<div class="tafel"><div class="woche-kopf"><div><span class="eyebrow">Ferienprogramm · bis ${fmtD(f.bis)}</span><h2>${fertig ? 'Geschafft: Bonuspunkt sicher' : `Noch ${f.tage - n} ${f.tage - n === 1 ? 'Übungstag' : 'Übungstage'}`}</h2></div><div class="pips" aria-label="${n} von ${f.tage} Übungstagen">${pips}</div></div>
   <div class="small">Heute: <b class="num">${hMin} von ${CFG.zielMin} Minuten</b>${hMin >= CFG.zielMin ? ' · Übungstag geschafft' : ''}</div>
   <div class="balken" role="progressbar" aria-valuenow="${hMin}" aria-valuemax="${CFG.zielMin}"><i style="width:${Math.min(100, hMin / CFG.zielMin * 100)}%"></i></div>
-  <p class="small muted">Freiwillig: Übst du bis ${fmtD(f.bis)} an ${f.tage} Tagen je ${CFG.zielMin} Minuten, bekommst du in der Abfrage am ${fmtD(S.deck.week)} einen Bonuspunkt.</p></div>`;
+  <p class="small muted">Freiwillig: Übst du bis ${fmtD(f.bis)} an ${f.tage} Tagen je ${CFG.zielMin} Minuten, bekommst du in der Abfrage am ${fmtD(S.deck.week)} einen Bonuspunkt. Jede Übung zählt – auch die Kachel „Ferien-Wiederholung“ mit Vokabeln aus ${S.deck.extra && S.deck.extra.length ? esc(wdhName(S.deck)) : 'früheren Lektionen'}.</p></div>`;
 }
 function wochenKarteHTML() {
   const f = ferienAktiv(); if (f) return ferienKarteHTML(f);
@@ -803,9 +805,9 @@ function pflichtHTML() {
   const zeile = (name, n, ziel, sub) => { const fertig = n >= ziel; return `<div style="display:grid;gap:5px"><div class="kopfzeile"><span><b>${name}</b>${sub ? ` <span class="small muted">${sub}</span>` : ''}</span><span class="chip ${fertig ? 'ok' : 'neutral'} num">${fertig ? '✓ ' : ''}${Math.min(n, ziel)} / ${ziel}</span></div><div class="balken"><i style="width:${Math.min(100, n / ziel * 100)}%"></i></div></div>`; };
   const th = aktiveThemen();
   const titel = !gilt ? 'Wird am Montag abgefragt' : d.ka ? `Für die Klassenarbeit am ${fmtD(d.week)}` : `Wird am ${fmtD(d.week)} abgefragt`;
-  const wahl = d && d.extra && d.extra.length ? `<div class="feld"><label for="wdh-wahl">Vokabeln beim Üben</label><select id="wdh-wahl">
-    ${[['mix', 'Karten der Woche und Wiederholung gemischt'], ['woche', 'nur die Karten der Woche'], ...d.extra.map(g => [g.label, 'nur Wiederholung ' + g.label])].map(([v, t]) => `<option value="${esc(v)}" ${(S.wdhWahl || 'mix') === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
-    <span class="small muted">Wiederholung ${esc(d.extra.map(g => g.label).join(' und '))} (freiwillig, wird nicht abgefragt): <b class="num">${z.wdh || 0}</b> Antworten</span></div>` : '';
+  const wahl = d && d.extra && d.extra.length ? `<div style="display:grid;gap:5px"><div class="kopfzeile"><span><b>${d.ferien ? 'Ferien-Wiederholung' : 'Wiederholung'}</b> <span class="small muted">${esc(wdhName(d))} · freiwillig, wird nicht abgefragt</span></span><span class="chip neutral num">${z.wdh || 0} Antworten</span></div></div>
+    <div class="feld"><label for="wdh-wahl">Vokabeln in Mauerbau, Schnellrunde und Karteikasten</label><select id="wdh-wahl">
+    ${[['mix', 'Karten der Woche und Wiederholung gemischt'], ['woche', 'nur die Karten der Woche'], ...d.extra.map(g => [g.label, 'nur Wiederholung ' + g.label])].map(([v, t]) => `<option value="${esc(v)}" ${(S.wdhWahl || 'mix') === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>` : '';
   return `<div class="tafel"><div class="kopfzeile"><div><span class="eyebrow">${d && d.ferien && gilt ? 'Das übst du bis zur Abfrage' : 'Das übst du diese Woche'}</span><h3 style="margin-top:4px">${titel}</h3></div><button class="knopf klein leer" data-akt="wocheScannen">Wochen-Code scannen</button></div>
   ${zeile('Vokabeln', z.vok || 0, Math.min(CFG.zielVokMax, ids.length * CFG.zielVokFaktor), ids.length + ' Karten aus ' + lekName(lek) + (d ? '' : ', Vorlage'))}
   ${th.map(t => zeile(THEMEN[t].name, z[t] || 0, CFG.zielThema, lekName(THEMEN[t].l))).join('')}
@@ -820,6 +822,7 @@ RENDER.ueben = () => {
     <button class="kachel" data-akt="schnellrunde"><b>Schnellrunde</b><span>10 gemischte Fragen aus deinen Vokabeln und der Grammatik der Woche.</span></button>
     <button class="kachel" data-akt="kartei"><b>Karteikasten</b><span>Karte umdrehen und selbst einschätzen. Was sitzt, wandert ins nächste Fach.</span></button>
     ${th.length ? `<button class="kachel" data-akt="formen" style="grid-column:1/-1"><b>Grammatik-Training</b><span>${th.map(t => esc(THEMEN[t].name)).join(' · ')}</span></button>` : ''}
+    ${S.deck && S.deck.extra && S.deck.extra.length ? `<button class="kachel" data-akt="wdhRunde" style="grid-column:1/-1"><b>${S.deck.ferien ? 'Ferien-Wiederholung' : 'Wiederholung'}</b><span>Vokabeln aus ${esc(wdhName(S.deck))} · 10 Fragen · freiwillig${S.deck.ferien ? ', zählt fürs Ferienprogramm' : ''}</span></button>` : ''}
     ${fehlerIds().length ? `<button class="kachel" data-akt="fehlerTraining" style="grid-column:1/-1"><b>Fehler-Training</b><span>${fehlerIds().length} Aufgaben, die in deinen Abfragen falsch waren</span></button>` : ''}
   </div>`;
 };
@@ -895,14 +898,15 @@ function markiere(f, i) {
 
 // Schnellrunde & Formen-Training
 function rundeStarten(art) {
-  SITZ = { art, nr: 0, max: 10, richtig: 0, zuletzt: [], pool: art === 'fehler' ? fehlerIds() : null };
-  if (art === 'fehler' && !SITZ.pool.length) { SITZ = null; toast('Keine Fehler gespeichert.'); return; }
-  ovOeffnen(art === 'formen' ? 'Grammatik-Training' : art === 'fehler' ? 'Fehler-Training' : 'Schnellrunde'); rundeFrage();
+  const pool = art === 'fehler' ? fehlerIds() : art === 'wdh' && S.deck && S.deck.extra ? S.deck.extra.flatMap(g => g.ids).map(i => 'v' + i) : null;
+  SITZ = { art, nr: 0, max: 10, richtig: 0, zuletzt: [], pool };
+  if ((art === 'fehler' || art === 'wdh') && !(pool && pool.length)) { SITZ = null; toast(art === 'fehler' ? 'Keine Fehler gespeichert.' : 'Keine Wiederholung vorhanden.'); return; }
+  ovOeffnen(art === 'formen' ? 'Grammatik-Training' : art === 'fehler' ? 'Fehler-Training' : art === 'wdh' ? (S.deck.ferien ? 'Ferien-Wiederholung' : 'Wiederholung') : 'Schnellrunde'); rundeFrage();
 }
 function rundeFrage() {
   const s = SITZ; if (s.nr >= s.max) return rundeEnde();
   const gramZug = aktiveThemen().length && (s.art === 'formen' || [2, 5, 7, 9].includes(s.nr));
-  const id = s.art === 'fehler' ? naechste(s.pool, s.zuletzt) : gramZug ? gramZiehen(s.zuletzt) : vokZiehen(s.zuletzt); s.zuletzt = [id, ...s.zuletzt].slice(0, Math.min(4, (s.pool || [1, 2, 3, 4, 5]).length - 1));
+  const id = s.pool ? naechste(s.pool, s.zuletzt) : gramZug ? gramZiehen(s.zuletzt) : vokZiehen(s.zuletzt); s.zuletzt = [id, ...s.zuletzt].slice(0, Math.min(4, (s.pool || [1, 2, 3, 4, 5]).length - 1));
   s.f = frageAus(id); s.beantwortet = false;
   $('#ov-info').textContent = `Frage ${s.nr + 1} von ${s.max}`;
   $('#ov-inhalt').innerHTML = frageHTML(s.f, '<div id="rueck"></div><div id="weiter"></div>');
@@ -1269,13 +1273,14 @@ const AKT = {
       });
       if (S.deck && S.deck.week !== deck.week) S.deckVorher = S.deck;
       S.deck = deck; speichereS();
-      return { ok: true, html: `${deck.ids.length} Vokabeln · ${deck.themen.length} Grammatikthemen<br><span style="font-size:1rem">${deck.ka ? 'Klassenarbeit am ' + fmtD(wk) : 'Abfrage am ' + fmtD(wk)}${deck.ferien ? '<br>Ferienprogramm bis ' + fmtD(deck.ferien.bis) : ''}</span>` };
+      return { ok: true, html: `${deck.ids.length} Vokabeln · ${deck.themen.length} Grammatikthemen<br><span style="font-size:1rem">${deck.ka ? 'Klassenarbeit am ' + fmtD(wk) : 'Abfrage am ' + fmtD(wk)}${deck.ferien ? '<br>Ferienprogramm bis ' + fmtD(deck.ferien.bis) : ''}${deck.extra && deck.extra.length ? '<br>Wiederholung: ' + esc(wdhName(deck)) : ''}</span>` };
     });
   },
   spielMauer() { if (SITZ && SITZ.timer) clearInterval(SITZ.timer); mauerStarten(); },
   schnellrunde() { rundeStarten('mix'); },
   formen() { rundeStarten('formen'); },
   fehlerTraining() { rundeStarten('fehler'); },
+  wdhRunde() { rundeStarten('wdh'); },
   kartei() { karteiStarten(); },
   nochmal() { rundeStarten(SITZ.art); },
   ovZu() { ovZu(); },
