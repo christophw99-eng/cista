@@ -1222,9 +1222,39 @@ RENDER.liste = () => {
 };
 RENDER_NACH.liste = () => { const f = $('#t-laden'); if (f) f.onchange = () => sicherungLaden(f.files[0], 't'); };
 // Kursbild für den Beamer: Übungszeit und häufigste Fehler; Punkte nur aufgeklappt
+// Auswahl im Kursbild: Montagsabfragen und Kurztests (Wert 'k:Datum')
+function bildAuswahlHTML(aktiv) {
+  const ds = Object.keys(T.results).sort().reverse(), ks = Object.keys(T.kurz || {}).sort().reverse();
+  return `<select id="bild-datum" style="width:auto">${ks.map(k => `<option value="k:${k}" ${'k:' + k === aktiv ? 'selected' : ''}>Kurztest ${fmtD(k)}</option>`).join('')}${ds.map(k => `<option value="${k}" ${k === aktiv ? 'selected' : ''}>Abfrage ${fmtD(k)}</option>`).join('')}</select>`;
+}
+const mittel = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+function kurzBildHTML(datum) {
+  const k = T.kurz[datum], werte = Object.values(k.erg), n = werte.length, max = Math.max(...werte.map(e => e.max));
+  const pz = e => e.p / e.max * 100, minuten = e => e.tage.reduce((x, y) => x + y, 0);
+  const avg = mittel(werte.map(pz)), minAvg = Math.round(mittel(werte.map(minuten)));
+  const geuebt = werte.filter(e => minuten(e) >= CFG.zielMin), wenig = werte.filter(e => minuten(e) < CFG.zielMin);
+  const hist = Array.from({ length: max + 1 }, (_, i) => werte.filter(e => e.p === i).length), hMax = Math.max(1, ...hist);
+  const fz = {}; werte.forEach(e => e.miss.forEach(id => fz[id] = (fz[id] || 0) + 1));
+  const top = Object.entries(fz).filter(([id]) => gueltig(id)).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const vergleich = geuebt.length >= 3 && wenig.length >= 3
+    ? `<div class="zahlen"><div class="zahl-kachel"><span class="eyebrow">Mind. ${CFG.zielMin} Min geübt</span><b class="num">${Math.round(mittel(geuebt.map(pz)))} %</b><span class="small muted">richtig im Schnitt · ${geuebt.length} Schüler</span></div>
+       <div class="zahl-kachel"><span class="eyebrow">Weniger geübt</span><b class="num">${Math.round(mittel(wenig.map(pz)))} %</b><span class="small muted">richtig im Schnitt · ${wenig.length} Schüler</span></div></div>`
+    : `<p class="small muted">Den Vergleich „geübt / weniger geübt“ zeigt Cista erst, wenn in beiden Gruppen mindestens drei Schüler sind – sonst wäre er nicht anonym.</p>`;
+  return `<div class="tafel"><div class="woche-kopf"><div><span class="eyebrow">Kursbild · anonym · zählt nicht für die Note</span><h2>Kurztest ${fmtD(datum)}</h2><p class="small">${esc(THEMEN[k.th] ? THEMEN[k.th].name : '')}</p></div>${bildAuswahlHTML('k:' + datum)}</div></div>
+  <div class="zahlen"><div class="zahl-kachel"><span class="eyebrow">Richtig im Schnitt</span><b class="num">${Math.round(avg)} %</b><span class="small muted">${n} Schüler</span></div>
+  <div class="zahl-kachel"><span class="eyebrow">Übungszeit</span><b class="num">${minAvg} Min</b><span class="small muted">im Schnitt seit ${fmtD(k.seit)}</span></div>
+  <div class="zahl-kachel"><span class="eyebrow">Mind. ${CFG.zielMin} Min geübt</span><b class="num">${geuebt.length} von ${n}</b><span class="small muted">seit ${fmtD(k.seit)}</span></div></div>
+  <div class="tafel"><h3>Hat sich das Üben gelohnt?</h3>${vergleich}</div>
+  <div class="tafel"><h3>Verteilung der richtigen Antworten</h3><div class="histo">${hist.map((h, i) => `<div><em>${h || ''}</em><i style="height:${h / hMax * 120}px"></i><small>${i}</small></div>`).join('')}</div></div>
+  <div class="tafel"><h3>Das üben wir noch einmal</h3><div class="fehlerliste">${top.length ? top.map(([id, c]) => `<div><span>${esc(idLabel(id))}</span><b class="num">${c}×</b></div>`).join('') : '<p class="small">Keine Fehler erfasst.</p>'}</div></div>`;
+}
 RENDER.bild = () => {
-  const ds = Object.keys(T.results).sort(); if (!ds.length) return '<div class="hinweis">Noch keine Abfragen erfasst. Nach dem ersten Scannen erscheint hier das Kursbild.</div>';
-  const d = store.get('bildDatum', null); const datum = ds.includes(d) ? d : ds[ds.length - 1];
+  const ds = Object.keys(T.results).sort(), ks = Object.keys(T.kurz || {}).sort();
+  const d = store.get('bildDatum', null);
+  if (d && d.startsWith('k:') && ks.includes(d.slice(2))) return kurzBildHTML(d.slice(2));
+  if (!ds.length && ks.length) return kurzBildHTML(ks[ks.length - 1]);
+  if (!ds.length) return '<div class="hinweis">Noch keine Abfragen erfasst. Nach dem ersten Scannen erscheint hier das Kursbild.</div>';
+  const datum = ds.includes(d) ? d : ds[ds.length - 1];
   const werte = Object.values(T.results[datum]); const n = werte.length; const max = werte[0].max;
   const ferien = werte.some(e => e.ft !== undefined);
   const avg = werte.reduce((a, e) => a + punkte(e), 0) / n;
@@ -1236,7 +1266,7 @@ RENDER.bild = () => {
   const reihe = ds.slice(-8).map(k => { const w = Object.values(T.results[k]); return { k, pz: Math.round(w.reduce((a, e) => a + punkte(e) / e.max, 0) / w.length * 100), min: Math.round(w.reduce((a, e) => a + e.min, 0) / w.length) }; });
   const minMax = Math.max(CFG.zielMin * CFG.zielTage, ...reihe.map(v => v.min));
   return `<div class="tafel"><div class="woche-kopf"><div><span class="eyebrow">Kursbild · anonym</span><h2>Abfrage ${fmtD(datum)}</h2></div>
-  <select id="bild-datum" style="width:auto">${ds.slice().reverse().map(k => `<option value="${k}" ${k === datum ? 'selected' : ''}>${fmtD(k)}</option>`).join('')}</select></div></div>
+  ${bildAuswahlHTML(datum)}</div></div>
   <div class="zahlen"><div class="zahl-kachel"><span class="eyebrow">${ferien ? 'Ferienziel erreicht' : 'Übungsziel erreicht'}</span><b class="num">${ziel} von ${n}</b><span class="small muted">${ferien ? 'Bonuspunkt bekommen' : `mind. ${CFG.zielTage} Tage à ${CFG.zielMin} Min`}</span></div>
   <div class="zahl-kachel"><span class="eyebrow">Übungszeit</span><b class="num">${minAvg} Min</b><span class="small muted">im Schnitt in der Woche vor der Abfrage</span></div></div>
   <div class="tafel"><h3>Das üben wir noch einmal</h3><div class="fehlerliste">${top.length ? top.map(([id, c]) => `<div><span class="${id[0] === 'v' ? 'lat' : ''}">${esc(idLabel(id))}</span><b class="num">${c}×</b></div>`).join('') : '<p class="small">Keine Fehler erfasst.</p>'}</div></div>
@@ -1269,7 +1299,8 @@ function kurzTabelleHTML(datum) {
   ${da.length ? `<div class="tabwrap"><table><thead><tr><th>Name</th><th class="zahl">Richtig</th>${tage.map(d => `<th class="zahl">Min ${WT[parseD(d).getDay()]}</th>`).join('')}<th class="zahl">Aufgaben im Thema</th></tr></thead><tbody>
   ${da.map(r => { const e = k.erg[r.nr]; return `<tr><td>${esc(r.name)}</td><td class="zahl">${e.p}/${e.max}</td>${tage.map((_, i) => `<td class="zahl">${e.tage[i] !== undefined ? e.tage[i] : '–'}</td>`).join('')}<td class="zahl">${e.a}</td></tr>`; }).join('')}</tbody></table></div>
   <p class="small">Im Schnitt ${Math.round(avg)} % richtig.${top.length ? ' Am häufigsten falsch: ' + top.map(([id, c]) => esc(idLabel(id)) + ' (' + c + '×)').join(', ') + '.' : ''}</p>
-  <p class="small muted">Minuten = echte Übungszeit je Tag (bis zum Kurztest). Aufgaben im Thema = beantwortete Übungsaufgaben zu diesem Thema seit ${fmtD(k.seit)}.</p>` : ''}</div>`;
+  <p class="small muted">Minuten = echte Übungszeit je Tag (bis zum Kurztest). Aufgaben im Thema = beantwortete Übungsaufgaben zu diesem Thema seit ${fmtD(k.seit)}.</p>
+  <div><button class="knopf klein" data-akt="kurzBild" data-datum="${datum}">Als Kursbild zeigen (anonym, für den Beamer)</button></div>` : ''}</div>`;
 }
 function ergebnisVerarbeiten(txt) {
   const t = codeLesen(txt); if (!t) return { ok: false, html: 'Kein gültiger Cista-Code' };
@@ -1370,6 +1401,7 @@ const AKT = {
   formen() { rundeStarten('formen'); },
   fehlerTraining() { rundeStarten('fehler'); },
   wdhRunde() { rundeStarten('wdh'); },
+  kurzBild(b) { store.set('bildDatum', 'k:' + b.dataset.datum); zeige('bild'); },
   kurzScannen() {
     scannerOeffnen('Kurztest-Code scannen', false, txt => {
       const t = codeLesen(txt); if (!t || t[0] !== 'T') return { ok: false, html: 'Das ist kein Kurztest-Code' };
