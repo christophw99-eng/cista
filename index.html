@@ -226,6 +226,18 @@ details.anpassen[open]>summary{margin-bottom:10px}
 details.anpassen>.feld,details.anpassen>.wahl-liste{margin-bottom:12px}
 details.nur-lehrkraft>summary{cursor:pointer}
 details.nur-lehrkraft[open]{gap:12px}
+/* Plenum */
+.pl-tab td,.pl-tab th{text-align:center}
+.pl-ein{width:100%;min-width:0;font-size:1.25rem;padding:8px 6px;border:2px solid var(--perg-2);border-radius:8px;text-align:center;background:var(--weiss)}
+.pl-ein:disabled{background:var(--perg);color:var(--stein)}
+.pl-zelle{font-size:1.2rem}.pl-zelle.ok{background:#DCEFE0}.pl-zelle.no{background:#F7DEDB}
+.pl-richtig{display:block;font-size:.95rem;color:var(--ok);font-weight:700}
+.pl-signal{display:grid;justify-items:center;gap:4px;padding:28px 12px;border-radius:var(--r);color:#fff;font-size:1.6rem}
+.pl-signal span{font-size:.9rem;opacity:.85}.pl-signal.ok{background:var(--ok)}.pl-signal.no{background:var(--err)}
+.pl-tafel{font-size:1rem;table-layout:fixed}.pl-tafel th,.pl-tafel td{text-align:center;padding:6px 3px}
+.pl-gross{font-size:clamp(1rem,2.7vw,2rem);height:2.3em}
+.pl-tafel th.jetzt,.pl-tafel td.jetzt{background:#FFF3C4}
+td.warn{background:#F7DEDB}
 </style></head><body>
 <header class="kopf"><div class="kopf-in"><div class="marke">Cista<small>Lateinkiste</small></div><div class="wer" id="wer"></div></div></header>
 <main id="main"></main>
@@ -549,6 +561,24 @@ function idLabel(id) {
   return id;
 }
 
+/* ---------- Plenum: Formentabellen gemeinsam zusammentragen ---------- */
+// Zeilen: Kasus mit Singular und Plural (m., f., n.); erarbeitet wird erst der Singular Kasus für Kasus, dann der Plural
+const PLENUM = {
+  hic: { titel: 'hic, haec, hoc', zeilen: [
+    ['Nominativ', ['hic', 'haec', 'hoc'], ['hī', 'hae', 'haec']],
+    ['Genitiv', ['huius', 'huius', 'huius'], ['hōrum', 'hārum', 'hōrum']],
+    ['Dativ', ['huic', 'huic', 'huic'], ['hīs', 'hīs', 'hīs']],
+    ['Akkusativ', ['hunc', 'hanc', 'hoc'], ['hōs', 'hās', 'haec']],
+    ['Ablativ', ['hōc', 'hāc', 'hōc'], ['hīs', 'hīs', 'hīs']]
+  ] }
+};
+const PLENUM_STANDARD = 'hic';
+// Schritte: [Kasusname, 'Sg'|'Pl', Zeilennummer, drei Formen]
+const plenumSchritte = id => { const z = PLENUM[id].zeilen; return [...z.map((r, k) => [r[0], 'Sg', k, r[1]]), ...z.map((r, k) => [r[0], 'Pl', k, r[2]])]; };
+const NUM_LANG = { Sg: 'Singular', Pl: 'Plural' };
+const plenumGleich = (a, b) => plain(a).replace(/\s+/g, '') === plain(b).replace(/\s+/g, '');
+const GEN3 = ['m.', 'f.', 'n.'];
+
 /* ---------- Zustand ---------- */
 let ROLE = store.get('role', null);           // 'schueler' | 'lehrer' | null
 let TESTMODUS = store.get('testmodus', false); // Lehrkraft schaut als Testschüler
@@ -659,11 +689,12 @@ const ICON = {
   verteilen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="13" height="17" rx="2"/><path d="M8 8h6M8 12h6M8 16h3"/></svg>',
   scan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8V4h4M17 4h4v4M21 16v4h-4M7 20H3v-4M3 12h18"/></svg>',
   liste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg>',
+  plenum: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M3 8h18M9 4v12M15 4v12M12 16v4M8 20h8"/></svg>',
   bild: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="M8 21h8M12 17v4M7 13v-2M11 13V9M15 13v-4"/></svg>'
 };
 const TABS = {
   schueler: [['ueben', 'Üben'], ['abfrage', 'Abfrage'], ['woche', 'Meine Woche'], ['code', 'Mein Code']],
-  lehrer: [['kurs', 'Kurs'], ['verteilen', 'Woche'], ['scan', 'Scannen'], ['liste', 'Liste'], ['bild', 'Kursbild']]
+  lehrer: [['kurs', 'Kurs'], ['verteilen', 'Woche'], ['plenum', 'Plenum'], ['scan', 'Scannen'], ['liste', 'Liste'], ['bild', 'Kursbild']]
 };
 let TAB = null;
 
@@ -716,6 +747,11 @@ function zeige(tab) {
   window.scrollTo(0, 0);
   if (RENDER_NACH[tab]) RENDER_NACH[tab]();
 }
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('pl-ein')) return;
+  e.preventDefault(); const alle = $$('.pl-ein'); const i = alle.indexOf(e.target);
+  if (i < alle.length - 1) alle[i + 1].focus(); else if (AKT.plenumBestaetigen) AKT.plenumBestaetigen();
+});
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-tab]'); if (t) { zeige(t.dataset.tab); return; }
   const a = e.target.closest('[data-akt]'); if (a && AKT[a.dataset.akt]) AKT[a.dataset.akt](a, e);
@@ -871,6 +907,7 @@ RENDER.ueben = () => {
     <button class="kachel" data-akt="kartei"><b>Karteikasten</b><span>Karte umdrehen und selbst einschätzen. Was sitzt, wandert ins nächste Fach.</span></button>
     ${th.length ? `<button class="kachel" data-akt="formen" style="grid-column:1/-1"><b>Grammatik-Training</b><span>${th.map(t => esc(THEMEN[t].name)).join(' · ')}</span></button>` : ''}
     ${S.deck && S.deck.extra && S.deck.extra.length ? `<button class="kachel" data-akt="wdhRunde" style="grid-column:1/-1"><b>${S.deck.ferien ? 'Ferien-Wiederholung' : 'Wiederholung'}</b><span>Vokabeln aus ${esc(wdhName(S.deck))} · 10 Fragen · freiwillig${S.deck.ferien ? ', zählt fürs Ferienprogramm' : ''}</span></button>` : ''}
+    <button class="kachel" data-akt="plenumStart" style="grid-column:1/-1"><b>Plenum · im Unterricht</b><span>Formen von ${esc(PLENUM[PLENUM_STANDARD].titel)} gemeinsam zusammentragen – Schritt für Schritt mit der Tafel</span></button>
     ${fehlerIds().length ? `<button class="kachel" data-akt="fehlerTraining" style="grid-column:1/-1"><b>Fehler-Training</b><span>${fehlerIds().length} Aufgaben, die in deinen Abfragen falsch waren</span></button>` : ''}
   </div>`;
 };
@@ -1071,6 +1108,57 @@ function mauerEnde(fertig) {
   <h2 class="num">${s.punkte} Punkte</h2><p>${fertig ? 'Rom ist sicher. Stark!' : 'Drei Fehler – die Baustelle ruht.'}${neu ? ' Neuer Bestwert!' : ''}</p>
   <div class="reihe" style="justify-content:center"><button class="knopf" data-akt="spielMauer">Neues Spiel</button><button class="knopf leer" data-akt="ovZu">Fertig</button></div></div>`;
 }
+
+/* ---------- Plenum (Schüler) ---------- */
+function plenumStarten(id = PLENUM_STANDARD) {
+  SITZ = { plenum: true, id, nr: 0, phase: 'eingabe', ok: [] };
+  ovOeffnen('Plenum · ' + PLENUM[id].titel); plenumSchritt();
+}
+function plenumSchritt() {
+  const s = SITZ, P = PLENUM[s.id], alle = plenumSchritte(s.id), st = alle[s.nr], loes = st[3];
+  $('#ov-info').textContent = `Schritt ${s.nr + 1} von ${alle.length}`;
+  const zelle = i => {
+    const w = s.werte ? s.werte[i] : '';
+    if (s.phase === 'loesung') {
+      const ok = plenumGleich(w, loes[i]);
+      return `<td class="pl-zelle ${ok ? 'ok' : 'no'}"><span class="lat">${esc(w || '–')}</span>${ok ? '' : `<span class="pl-richtig lat">${esc(loes[i])}</span>`}</td>`;
+    }
+    return `<td><input class="pl-ein lat" data-i="${i}" value="${esc(w)}" ${s.phase === 'bestaetigt' ? 'disabled' : ''} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="${GEN3[i]}"></td>`;
+  };
+  let unten = '';
+  if (s.phase === 'eingabe') unten = `<button class="knopf" data-akt="plenumBestaetigen">Bestätigen</button><p class="small muted">Trag alle drei Formen ein. Längenzeichen musst du nicht tippen.</p>`;
+  if (s.phase === 'bestaetigt') unten = `<div class="hinweis">Festgelegt. Warte, bis die Lösung an der Tafel erscheint.</div><button class="knopf" data-akt="plenumLoesung">Lösung zeigen</button>`;
+  if (s.phase === 'loesung') {
+    const n = loes.filter((f, i) => plenumGleich(s.werte[i], f)).length, voll = n === loes.length;
+    const naechst = alle[s.nr + 1];
+    unten = `<div class="pl-signal ${voll ? 'ok' : 'no'}"><b>${voll ? 'Alles richtig' : n + ' von ' + loes.length + ' richtig'}</b><span>iPad hochhalten</span></div>
+    <button class="knopf" data-akt="plenumWeiter">${naechst ? 'Weiter: ' + esc(naechst[0] + ' ' + NUM_LANG[naechst[1]]) : 'Auswerten'}</button>`;
+  }
+  $('#ov-inhalt').innerHTML = `<div class="kopfzeile"><span class="eyebrow">${esc(P.titel)}</span><span class="small muted">Wie an der Tafel</span></div>
+  <div class="tafel"><h2>${esc(st[0])} ${NUM_LANG[st[1]]}</h2>
+  <div class="tabwrap"><table class="pl-tab"><thead><tr>${GEN3.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody><tr>${[0, 1, 2].map(zelle).join('')}</tr></tbody></table></div></div>
+  ${unten}`;
+  if (s.phase === 'eingabe') { const e = $('.pl-ein'); if (e) e.focus(); }
+}
+function plenumBestaetigen() {
+  const s = SITZ; s.werte = $$('.pl-ein').map(i => i.value.trim());
+  if (s.werte.some(w => !w)) { toast('Bitte alle drei Felder ausfüllen – auch wenn du rätst.'); return; }
+  s.phase = 'bestaetigt'; plenumSchritt();
+}
+function plenumLoesung() { SITZ.phase = 'loesung'; plenumSchritt(); }
+function plenumWeiter() {
+  const s = SITZ, alle = plenumSchritte(s.id), loes = alle[s.nr][3];
+  loes.forEach((f, i) => s.ok.push(plenumGleich(s.werte[i], f) ? 1 : 0));
+  s.nr++; s.werte = null; s.phase = 'eingabe';
+  if (s.nr < alle.length) return plenumSchritt();
+  const heute = dkey(); S.plenum = S.plenum || {}; S.plenum[heute] = { id: s.id, ok: s.ok.join('') }; speichereS();
+  const n = s.ok.filter(Boolean).length, code = plenumCode(heute);
+  $('#ov-info').textContent = '';
+  $('#ov-inhalt').innerHTML = `<div class="tafel" style="text-align:center;justify-items:center"><span class="eyebrow">Plenum · zählt nicht für die Note</span><h2 class="num">${n} von ${s.ok.length} Formen richtig</h2>
+  <p>Wenn deine Lehrkraft es möchte, zeig ihr diesen Code.</p><div class="qr gross">${qrSvg(code)}</div>
+  <div class="reihe" style="justify-content:center"><button class="knopf leer" data-akt="ovZu">Fertig</button>${TESTMODUS ? `<button class="knopf klein gold" data-akt="testInListe" data-code="${esc(code)}">In die Lehrerliste übernehmen (Test)</button>` : ''}</div></div>`;
+}
+const plenumCode = datum => { const p = S.plenum[datum]; return codeBauen(['P', S.nr, datum, p.id, p.ok]); };
 
 /* ---------- Montagsabfrage ---------- */
 function abfrageStart() {
@@ -1377,6 +1465,7 @@ function kurzTabelleHTML(datum) {
 function ergebnisVerarbeiten(txt) {
   const t = codeLesen(txt); if (!t) return { ok: false, html: 'Kein gültiger Cista-Code' };
   if (t[0] === 'K') return kurzVerarbeiten(t);
+  if (t[0] === 'P') return plenumVerarbeiten(t);
   if (t[0] !== 'R') return { ok: false, html: 'Das ist kein Ergebnis-Code' };
   const [, nr, datum, tage, min, n, p, max, miss, ft, fb, pv, mv, pg, mg] = t;
   const r = T.roster.find(x => String(x.nr) === nr) || (nr === '0' ? { nr: 0, name: 'Testschüler' } : null);
@@ -1395,6 +1484,46 @@ function kuerzel(z) {
   const gross = w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
   return gross(t[0].slice(0, 3)) + gross(t[t.length - 1].slice(0, 3));
 }
+/* ---------- Plenum (Lehrkraft, für den Beamer) ---------- */
+function plenumStand() { return store.get('plenum', { id: PLENUM_STANDARD, nr: 0, auf: false }); }
+// Feldnummer (Zeile k, Numerus, Genus g) -> Position im Ergebnis-Code (erst alle Singular-Schritte, dann Plural)
+const plenumIndex = (id, k, nu, g) => ((nu === 'Sg' ? 0 : PLENUM[id].zeilen.length) + k) * 3 + g;
+RENDER.plenum = () => {
+  const st = plenumStand(), P = PLENUM[st.id], alle = plenumSchritte(st.id), ende = st.nr >= alle.length, akt = alle[st.nr];
+  const zelle = (k, nu, g, f) => {
+    const si = alle.findIndex(x => x[2] === k && x[1] === nu), jetzt = !ende && si === st.nr;
+    const sichtbar = si < st.nr || (jetzt && st.auf);
+    return `<td class="pl-gross ${jetzt ? 'jetzt' : ''}">${sichtbar ? `<span class="lat">${esc(f)}</span>` : ''}</td>`;
+  };
+  return `<div class="tafel"><div class="woche-kopf"><div><span class="eyebrow">Plenum · für den Beamer</span><h2>${esc(P.titel)}</h2></div>
+  <span class="chip neutral">${ende ? 'Fertig' : `Schritt ${st.nr + 1} von ${alle.length}: ${esc(akt[0])} ${NUM_LANG[akt[1]]}`}</span></div>
+  <div class="reihe">${ende ? '' : (st.auf ? `<button class="knopf" data-akt="plenumNaechster">${st.nr + 1 >= alle.length ? 'Abschließen' : 'Weiter: ' + esc(alle[st.nr + 1][0] + ' ' + NUM_LANG[alle[st.nr + 1][1]])}</button>` : `<button class="knopf" data-akt="plenumAuf">Auflösen</button>`)}
+  ${st.nr > 0 || st.auf ? '<button class="knopf leer klein" data-akt="plenumZurueck">Zurück</button><button class="knopf leer klein" data-akt="plenumNeu">Von vorn</button>' : ''}</div>
+  <div class="tabwrap"><table class="pl-tafel"><thead><tr><th></th>${GEN3.map(g => `<th>Sg. ${g}</th>`).join('')}${GEN3.map(g => `<th>Pl. ${g}</th>`).join('')}</tr></thead>
+  <tbody>${P.zeilen.map((z, k) => `<tr><th scope="row" class="${!ende && akt[2] === k ? 'jetzt' : ''}">${esc(z[0])}</th>${z[1].map((f, g) => zelle(k, 'Sg', g, f)).join('')}${z[2].map((f, g) => zelle(k, 'Pl', g, f)).join('')}</tr>`).join('')}</tbody></table></div>
+  <p class="small muted">Erst der Singular Kasus für Kasus, dann der Plural. Die Schüler öffnen in Cista unter „Üben“ die Kachel „Plenum“, tragen die drei Formen des markierten Felds ein und bestätigen. Wenn du auflöst, tippen sie auf „Lösung zeigen“ und halten das iPad hoch: grün = alles richtig.</p></div>
+  ${plenumAuswertungHTML(st.id)}`;
+};
+function plenumAuswertungHTML(id) {
+  const tage = Object.keys(T.plenum || {}).filter(d => T.plenum[d].id === id).sort();
+  if (!tage.length) return `<div class="tafel"><h3>Auswertung</h3><p class="small">Wenn du am Ende die Plenum-Codes der Schüler unter „Scannen“ einsammelst, siehst du hier, welche Formen am häufigsten falsch waren.</p></div>`;
+  const d = tage[tage.length - 1], erg = Object.values(T.plenum[d].erg), P = PLENUM[id], n = erg.length;
+  const falsch = (k, nu, g) => { const i = plenumIndex(id, k, nu, g); return erg.filter(e => e[i] === '0').length; };
+  const td = (k, nu, g, f) => { const x = falsch(k, nu, g); return `<td class="zahl ${n && x >= n / 3 ? 'warn' : ''}"><span class="lat">${esc(f)}</span> · ${x}</td>`; };
+  return `<div class="tafel"><h3>Auswertung ${fmtD(d)} · ${n} Codes</h3><p class="small muted">Anzahl falsch je Form. Rot ab einem Drittel des Kurses.</p>
+  <div class="tabwrap"><table><thead><tr><th></th>${GEN3.map(g => `<th class="zahl">Sg. ${g}</th>`).join('')}${GEN3.map(g => `<th class="zahl">Pl. ${g}</th>`).join('')}</tr></thead>
+  <tbody>${P.zeilen.map((z, k) => `<tr><th scope="row">${esc(z[0])}</th>${z[1].map((f, g) => td(k, 'Sg', g, f)).join('')}${z[2].map((f, g) => td(k, 'Pl', g, f)).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+}
+function plenumVerarbeiten(t) {
+  const [, nr, datum, id, ok] = t;
+  const r = T.roster.find(x => String(x.nr) === nr) || (nr === '0' ? { nr: 0, name: 'Testschüler' } : null);
+  if (!r) return { ok: false, html: 'Nr. ' + esc(nr) + ' steht nicht in der Kursliste' };
+  if (!PLENUM[id]) return { ok: false, html: 'Unbekannte Plenum-Tabelle' };
+  T.plenum = T.plenum || {}; const p = T.plenum[datum] = T.plenum[datum] || { id, erg: {} };
+  p.erg[r.nr] = ok; speichereT();
+  return { ok: true, html: `${esc(r.name)}<br><span class="num" style="font-size:1rem">Plenum ${esc(PLENUM[id].titel)}: ${ok.split('').filter(x => x === '1').length}/${ok.length} richtig</span>` };
+}
+
 /* ---------- Demo-Kurs ---------- */
 function demoLaden() {
   const namen = ['AnnBer', 'BenKol', 'ClaMey', 'DavSch', 'EmmWol', 'FinLan', 'GreHof', 'HanPet', 'IdaRot', 'JonTho', 'LeaFis', 'MatZie'];
@@ -1498,6 +1627,14 @@ const AKT = {
     $('#kurz-qr').innerHTML = `<div class="qr gross">${qrSvg(c)}<b>Kurztest · ${n} Fragen · ${sek / 60} Minuten</b><span class="small">${esc(THEMEN[th].name)}${pq ? ' · nur Plusquamperfekt' : ''} · Übungszeit seit ${fmtD(seit)}</span><span class="small muted">Gilt nur heute · zählt nicht für die Note</span></div>`;
   },
   kartei() { karteiStarten(); },
+  plenumStart() { plenumStarten(); },
+  plenumBestaetigen() { plenumBestaetigen(); },
+  plenumLoesung() { plenumLoesung(); },
+  plenumWeiter() { plenumWeiter(); },
+  plenumAuf() { const s = plenumStand(); s.auf = true; store.set('plenum', s); zeige('plenum'); },
+  plenumNaechster() { const s = plenumStand(); s.nr++; s.auf = false; store.set('plenum', s); zeige('plenum'); },
+  plenumZurueck() { const s = plenumStand(); if (s.auf) s.auf = false; else if (s.nr > 0) { s.nr--; s.auf = true; } store.set('plenum', s); zeige('plenum'); },
+  plenumNeu() { store.set('plenum', { id: PLENUM_STANDARD, nr: 0, auf: false }); zeige('plenum'); },
   nochmal() { rundeStarten(SITZ.art); },
   ovZu() { ovZu(); },
   antwort(b) {
