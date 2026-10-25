@@ -238,6 +238,7 @@ details.nur-lehrkraft[open]{gap:12px}
 .pl-gross{font-size:clamp(1rem,2.7vw,2rem);height:2.3em}
 .pl-tafel th.jetzt,.pl-tafel td.jetzt{background:#FFF3C4}
 td.warn{background:#F7DEDB}
+.pl-codes{display:flex;gap:12px;flex-wrap:wrap}.pl-codes>div{display:grid;gap:2px;padding:8px 14px;border-radius:var(--r);background:var(--perg)}.pl-codes b{font-size:2rem;letter-spacing:.15em;color:var(--rot)}.pl-loescode{background:#FFF3C4!important}.pl-loescode b{font-size:2.6rem}
 </style></head><body>
 <header class="kopf"><div class="kopf-in"><div class="marke">Cista<small>Lateinkiste</small></div><div class="wer" id="wer"></div></div></header>
 <main id="main"></main>
@@ -578,6 +579,9 @@ const plenumSchritte = id => { const z = PLENUM[id].zeilen; return [...z.map((r,
 const NUM_LANG = { Sg: 'Singular', Pl: 'Plural' };
 const plenumGleich = (a, b) => plain(a).replace(/\s+/g, '') === plain(b).replace(/\s+/g, '');
 const GEN3 = ['m.', 'f.', 'n.'];
+// Start-Code (gilt nur heute) und Lösungscode je Schritt – beide erscheinen nur im Plenum-Tab der Lehrkraft
+const plenumStartCode = k => String(1000 + fnv(k + '|plenum|' + CFG.secret) % 9000);
+const plenumLoesCode = (k, id, nr) => String(10 + fnv(k + '|pl|' + id + '|' + nr + '|' + CFG.secret) % 90);
 
 /* ---------- Zustand ---------- */
 let ROLE = store.get('role', null);           // 'schueler' | 'lehrer' | null
@@ -860,7 +864,7 @@ function einrichtenHTML() {
 
 /* ===================== Schüleransicht ===================== */
 function testBandHTML() {
-  return `<div class="demo-band">Testansicht der Lehrkraft · Abfrage-Code heute: <span class="num">${abfrageCode(dkey())}</span>
+  return `<div class="demo-band">Testansicht der Lehrkraft · Abfrage-Code heute: <span class="num">${abfrageCode(dkey())}</span> · Plenum-Code: <span class="num">${plenumStartCode(dkey())}</span>
   <button class="knopf klein leer" data-akt="testReset">Testdaten zurücksetzen</button><button class="knopf klein" data-akt="zurLehrkraft">Zur Lehreransicht</button></div>`;
 }
 function heuteMin() { const d = S.days[dkey()]; return d ? Math.round(d.s / 60) : 0; }
@@ -1111,7 +1115,20 @@ function mauerEnde(fertig) {
 
 /* ---------- Plenum (Schüler) ---------- */
 function plenumStarten(id = PLENUM_STANDARD) {
-  SITZ = { plenum: true, id, nr: 0, phase: 'eingabe', ok: [] };
+  const heute = dkey();
+  if (S.plenumFrei !== heute && !TESTMODUS) {
+    dialog(`<h3>Plenum starten</h3><p class="small">Den Code zeigt deine Lehrkraft an der Tafel. Er gilt nur heute.</p>
+    <div class="feld"><label for="pl-code">Plenum-Code</label><input id="pl-code" class="code-eingabe num" type="text" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+    <p class="small" id="pl-fehler" style="color:var(--err)"></p><div class="reihe"><button class="knopf" id="pl-ok">Starten</button><button class="knopf leer" id="pl-ab">Abbrechen</button></div>`, d => {
+      const inp = $('#pl-code', d); inp.focus();
+      const ok = () => { if (inp.value.trim() !== plenumStartCode(heute)) { $('#pl-fehler', d).textContent = 'Der Code stimmt nicht. Schau noch einmal an die Tafel.'; return; } S.plenumFrei = heute; speichereS(); dialogZu(); plenumStarten(id); };
+      $('#pl-ok', d).onclick = ok; inp.onkeydown = e => { if (e.key === 'Enter') ok(); }; $('#pl-ab', d).onclick = dialogZu;
+    });
+    return;
+  }
+  // heute schon angefangen? Dann dort weitermachen (z. B. nach versehentlichem Schließen)
+  const l = S.plenumLauf && S.plenumLauf.datum === heute && S.plenumLauf.id === id && !(S.plenum && S.plenum[heute]) ? S.plenumLauf : null;
+  SITZ = { plenum: true, id, nr: l ? l.nr : 0, phase: 'eingabe', ok: l ? l.ok.slice() : [] };
   ovOeffnen('Plenum · ' + PLENUM[id].titel); plenumSchritt();
 }
 function plenumSchritt() {
@@ -1127,7 +1144,10 @@ function plenumSchritt() {
   };
   let unten = '';
   if (s.phase === 'eingabe') unten = `<button class="knopf" data-akt="plenumBestaetigen">Bestätigen</button><p class="small muted">Trag alle drei Formen ein. Längenzeichen musst du nicht tippen.</p>`;
-  if (s.phase === 'bestaetigt') unten = `<div class="hinweis">Festgelegt. Warte, bis die Lösung an der Tafel erscheint.</div><button class="knopf" data-akt="plenumLoesung">Lösung zeigen</button>`;
+  if (s.phase === 'bestaetigt') unten = `<div class="hinweis">Festgelegt. Wenn vorne die Lösung erscheint, steht daneben ein Lösungscode.</div>
+  <div class="feld"><label for="pl-loes">Lösungscode von der Tafel</label><input id="pl-loes" class="code-eingabe num" type="text" inputmode="numeric" maxlength="2" autocomplete="off" ${TESTMODUS ? `placeholder="${plenumLoesCode(dkey(), s.id, s.nr)}"` : ''}></div>
+  <p class="small" id="pl-loes-fehler" style="color:var(--err)"></p>
+  <button class="knopf" data-akt="plenumLoesung">Lösung zeigen</button>`;
   if (s.phase === 'loesung') {
     const n = loes.filter((f, i) => plenumGleich(s.werte[i], f)).length, voll = n === loes.length;
     const naechst = alle[s.nr + 1];
@@ -1139,17 +1159,26 @@ function plenumSchritt() {
   <div class="tabwrap"><table class="pl-tab"><thead><tr>${GEN3.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody><tr>${[0, 1, 2].map(zelle).join('')}</tr></tbody></table></div></div>
   ${unten}`;
   if (s.phase === 'eingabe') { const e = $('.pl-ein'); if (e) e.focus(); }
+  if (s.phase === 'bestaetigt') { const e = $('#pl-loes'); if (e) { e.focus(); e.onkeydown = ev => { if (ev.key === 'Enter') plenumLoesung(); }; } }
 }
 function plenumBestaetigen() {
   const s = SITZ; s.werte = $$('.pl-ein').map(i => i.value.trim());
   if (s.werte.some(w => !w)) { toast('Bitte alle drei Felder ausfüllen – auch wenn du rätst.'); return; }
   s.phase = 'bestaetigt'; plenumSchritt();
 }
-function plenumLoesung() { SITZ.phase = 'loesung'; plenumSchritt(); }
+function plenumLoesung() {
+  const s = SITZ, e = $('#pl-loes'), soll = plenumLoesCode(dkey(), s.id, s.nr);
+  if (!TESTMODUS && (!e || e.value.trim() !== soll)) {
+    const st = plenumSchritte(s.id)[s.nr];
+    $('#pl-loes-fehler').textContent = `Der Code passt nicht. Ist vorne gerade „${st[0]} ${NUM_LANG[st[1]]}“ aufgelöst?`; return;
+  }
+  s.phase = 'loesung'; plenumSchritt();
+}
 function plenumWeiter() {
   const s = SITZ, alle = plenumSchritte(s.id), loes = alle[s.nr][3];
   loes.forEach((f, i) => s.ok.push(plenumGleich(s.werte[i], f) ? 1 : 0));
   s.nr++; s.werte = null; s.phase = 'eingabe';
+  S.plenumLauf = { datum: dkey(), id: s.id, nr: s.nr, ok: s.ok.slice() }; speichereS();
   if (s.nr < alle.length) return plenumSchritt();
   const heute = dkey(); S.plenum = S.plenum || {}; S.plenum[heute] = { id: s.id, ok: s.ok.join('') }; speichereS();
   const n = s.ok.filter(Boolean).length, code = plenumCode(heute);
@@ -1497,11 +1526,12 @@ RENDER.plenum = () => {
   };
   return `<div class="tafel"><div class="woche-kopf"><div><span class="eyebrow">Plenum · für den Beamer</span><h2>${esc(P.titel)}</h2></div>
   <span class="chip neutral">${ende ? 'Fertig' : `Schritt ${st.nr + 1} von ${alle.length}: ${esc(akt[0])} ${NUM_LANG[akt[1]]}`}</span></div>
+  <div class="pl-codes"><div><span class="eyebrow">Plenum-Code heute</span><b class="num">${plenumStartCode(dkey())}</b></div>${!ende && st.auf ? `<div class="pl-loescode"><span class="eyebrow">Lösungscode</span><b class="num">${plenumLoesCode(dkey(), st.id, st.nr)}</b></div>` : ''}</div>
   <div class="reihe">${ende ? '' : (st.auf ? `<button class="knopf" data-akt="plenumNaechster">${st.nr + 1 >= alle.length ? 'Abschließen' : 'Weiter: ' + esc(alle[st.nr + 1][0] + ' ' + NUM_LANG[alle[st.nr + 1][1]])}</button>` : `<button class="knopf" data-akt="plenumAuf">Auflösen</button>`)}
   ${st.nr > 0 || st.auf ? '<button class="knopf leer klein" data-akt="plenumZurueck">Zurück</button><button class="knopf leer klein" data-akt="plenumNeu">Von vorn</button>' : ''}</div>
   <div class="tabwrap"><table class="pl-tafel"><thead><tr><th></th>${GEN3.map(g => `<th>Sg. ${g}</th>`).join('')}${GEN3.map(g => `<th>Pl. ${g}</th>`).join('')}</tr></thead>
   <tbody>${P.zeilen.map((z, k) => `<tr><th scope="row" class="${!ende && akt[2] === k ? 'jetzt' : ''}">${esc(z[0])}</th>${z[1].map((f, g) => zelle(k, 'Sg', g, f)).join('')}${z[2].map((f, g) => zelle(k, 'Pl', g, f)).join('')}</tr>`).join('')}</tbody></table></div>
-  <p class="small muted">Erst der Singular Kasus für Kasus, dann der Plural. Die Schüler öffnen in Cista unter „Üben“ die Kachel „Plenum“, tragen die drei Formen des markierten Felds ein und bestätigen. Wenn du auflöst, tippen sie auf „Lösung zeigen“ und halten das iPad hoch: grün = alles richtig.</p></div>
+  <p class="small muted">Erst der Singular Kasus für Kasus, dann der Plural. Die Schüler öffnen in Cista unter „Üben“ die Kachel „Plenum“ mit dem Plenum-Code, tragen die drei Formen des markierten Felds ein und bestätigen. Wenn du auflöst, geben sie den Lösungscode ein und halten das iPad hoch: grün = alles richtig.</p></div>
   ${plenumAuswertungHTML(st.id)}`;
 };
 function plenumAuswertungHTML(id) {
