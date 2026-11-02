@@ -250,6 +250,23 @@ td.warn{background:#F7DEDB}
 .genus-wahl .opt{min-width:72px;text-align:center;font-size:1.15rem}
 .rueck.pruef{background:#FFF4D6;color:#6B4A00}
 tr.pr-offen td{background:#FFF8E6}
+
+/* Prüfbereich Lehrkraft: Karten statt Tabelle, Knöpfe immer sichtbar */
+.pruef-liste{display:grid;gap:10px}
+.pruef-karte{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--r);border:2px solid var(--perg-2);background:var(--weiss)}
+.pruef-karte.offen{border-color:var(--gold);background:#FFF8E6}
+.pruef-karte.zaehlt{border-color:var(--ok);background:var(--ok-h)}
+.pruef-karte.zaehltnicht{border-color:var(--err);background:var(--err-h)}
+.pruef-text{display:grid;gap:3px;min-width:0;flex:1 1 260px}
+.pruef-text .lat{font-size:1.1rem}
+.pruef-knoepfe{display:flex;gap:8px;flex:0 0 auto}
+.pruef-knoepfe .knopf{min-height:44px;padding:0 16px}
+.pruef-knoepfe .knopf.gewaehlt{background:var(--stein);color:#fff;box-shadow:none}
+
+.pruef-karte.geaendert{box-shadow:0 0 0 3px rgba(201,164,77,.45)}
+.pruef-uebernehmen:disabled{opacity:.5;cursor:default}
+table.noten{width:auto;min-width:240px}
+.tabwrap:has(table.noten){width:fit-content;max-width:100%}
 </style></head><body>
 <header class="kopf"><div class="kopf-in"><div class="marke">Cista<small>Lateinkiste</small></div><div class="wer" id="wer"></div></div></header>
 <main id="main"></main>
@@ -275,21 +292,26 @@ const PPPV = [
 ];
 
 // Relativpronomen: Satz mit Lücke, Optionen (erste = richtig), Übersetzung, Begründung
+// Relativpronomen im Satz – wörtlich aus den Arbeitsblättern (Christoph, 2.11.2026):
+// [Satz mit Lücke, [richtig, Ablenker …], Übersetzung, Erklärung, Quelle]
 const RELS = [
-  ['Puella, ___ fugere cupīvit, Cloelia est.', ['quae','quam','cuius','quī'], 'Das Mädchen, das fliehen wollte, ist Cloelia.', 'Nom. Sg. f. – bezieht sich auf puella, ist im Relativsatz Subjekt.'],
-  ['Rēx, ___ Rōmānī timent, Porsenna est.', ['quem','quī','cui','quōs'], 'Der König, den die Römer fürchten, ist Porsenna.', 'Akk. Sg. m. – bezieht sich auf rēx, ist im Relativsatz Objekt.'],
-  ['Custōdēs, ___ rēx reprehendit, miserī sunt.', ['quōs','quī','quibus','quās'], 'Die Wächter, die der König tadelt, sind unglücklich.', 'Akk. Pl. m. – bezieht sich auf custōdēs, ist im Relativsatz Objekt.'],
-  ['Puellae, ___ Cloelia signum dedit, ad rīpam properant.', ['quibus','quās','quae','quārum'], 'Die Mädchen, denen Cloelia ein Zeichen gab, eilen zum Ufer.', 'Dat. Pl. f. – wem gab Cloelia ein Zeichen?'],
-  ['Foedus, ___ rēx cum Rōmānīs fēcit, nōn rumpitur.', ['quod','quem','quī','cui'], 'Der Vertrag, den der König mit den Römern geschlossen hat, wird nicht gebrochen.', 'Akk. Sg. n. – bezieht sich auf foedus.'],
-  ['Cloelia, ___ virtūtem rēx laudat, statuam accipit.', ['cuius','quae','quam','cui'], 'Cloelia, deren Tapferkeit der König lobt, erhält eine Statue.', 'Gen. Sg. f. – wessen Tapferkeit?'],
-  ['Obsidēs, ___ Cloelia dēlēgit, domum redūcuntur.', ['quōs','quī','quibus','quōrum'], 'Die Geiseln, die Cloelia ausgewählt hat, werden nach Hause zurückgeführt.', 'Akk. Pl. m. – Objekt zu dēlēgit.'],
-  ['Nūntiī, ___ Porsenna ad Rōmānōs mittit, verba rēgis nārrant.', ['quōs','quī','quae','quibus'], 'Die Boten, die Porsenna zu den Römern schickt, erzählen die Worte des Königs.', 'Akk. Pl. m. – Objekt zu mittit.'],
-  ['Urbs, ___ Rōmulus condidit, Rōma est.', ['quam','quae','quem','cuius'], 'Die Stadt, die Romulus gegründet hat, ist Rom.', 'Akk. Sg. f. – urbs ist feminin.'],
-  ['Porsenna, ___ Rōmānī foedus fēcerant, īrā ārdēbat.', ['quōcum','quācum','quibuscum','quem'], 'Porsenna, mit dem die Römer einen Vertrag geschlossen hatten, brannte vor Zorn.', 'Abl. Sg. m. + cum – cum steht hinter dem Relativpronomen.'],
-  ['Puellae, ___ parentēs in urbe exspectābant, gaudent.', ['quās','quae','quārum','quibus'], 'Die Mädchen, die die Eltern in der Stadt erwarteten, freuen sich.', 'Akk. Pl. f. – Objekt zu exspectābant.'],
-  ['Tēla, ___ custōdēs iactāvērunt, puellās nōn tetigērunt.', ['quae','quōs','quās','quod'], 'Die Geschosse, die die Wächter geschleudert haben, haben die Mädchen nicht berührt.', 'Akk. Pl. n. – tēla ist Neutrum Plural.'],
-  ['Vir, ___ fīlia Cloelia est, gaudet.', ['cuius','quī','quem','cui'], 'Der Mann, dessen Tochter Cloelia ist, freut sich.', 'Gen. Sg. m. – wessen Tochter?'],
-  ['Custōs, ___ rēx nōn crēdit, pūnītur.', ['cui','quem','quī','cuius'], 'Der Wächter, dem der König nicht glaubt, wird bestraft.', 'Dat. Sg. m. – crēdere steht mit Dativ.']
+  ['Rēx, ___ īrātus erat, custōdēs vocāvit.', ['quī','quem','cuius','quae'], 'Der König, der zornig war, rief die Wächter.', 'Nom. Sg. m. – bezieht sich auf rēx, ist im Relativsatz Subjekt.', 'AB 04'],
+  ['Puella, ___ rēx laudāvit, Cloelia erat.', ['quam','quae','quem','quās'], 'Das Mädchen, das der König lobte, war Cloelia.', 'Akk. Sg. f. – bezieht sich auf puella, ist im Relativsatz Objekt.', 'AB 04'],
+  ['Obsidēs, ___ Cloelia lībertātem dedit, gaudēbant.', ['quibus','quī','quōs','cui'], 'Die Geiseln, denen Cloelia die Freiheit gab, freuten sich.', 'Dat. Pl. m. – bezieht sich auf obsidēs, ist im Relativsatz Dativobjekt.', 'AB 04'],
+  ['Foedus, ___ Rōmānī fēcerant, nōn ruptum est.', ['quod','quem','quae','cuius'], 'Der Vertrag, den die Römer geschlossen hatten, wurde nicht gebrochen.', 'Akk. Sg. n. – bezieht sich auf foedus, ist im Relativsatz Objekt.', 'AB 04'],
+  ['Porsenna, ___ īra magna erat, Rōmānōs monuit.', ['cuius','quī','cui','quōrum'], 'Porsenna, dessen Zorn groß war, warnte die Römer.', 'Gen. Sg. m. – bezieht sich auf Porsenna, ist im Relativsatz Attribut.', 'AB 04'],
+  ['Porsenna rēx est, ___ Rōmānī timent.', ['quem','quī','quam','quōs'], 'Porsenna ist der König, den die Römer fürchten.', 'Akk. Sg. m. – bezieht sich auf rēx, ist im Relativsatz Objekt.', 'AB 05'],
+  ['Cloelia puella est, ___ custōdēs fefellit.', ['quae','quam','quī','cuius'], 'Cloelia ist das Mädchen, das die Wächter getäuscht hat.', 'Nom. Sg. f. – bezieht sich auf puella, ist im Relativsatz Subjekt.', 'AB 05'],
+  ['Nūntiī, ___ rēx vocāvit, ad Rōmānōs veniunt.', ['quōs','quī','quās','quem'], 'Die Boten, die der König gerufen hat, kommen zu den Römern.', 'Akk. Pl. m. – bezieht sich auf nūntiī, ist im Relativsatz Objekt.', 'AB 05'],
+  ['Statua, ___ Rōmānī posuērunt, in urbe est.', ['quam','quae','quem','quā'], 'Die Statue, die die Römer aufgestellt haben, ist in der Stadt.', 'Akk. Sg. f. – bezieht sich auf statua, ist im Relativsatz Objekt.', 'AB 05'],
+  ['Parentēs, ___ fīliae redūcuntur, gaudent.', ['quōrum','quōs','quī','cuius'], 'Die Eltern, deren Töchter zurückgebracht werden, freuen sich.', 'Gen. Pl. m. – bezieht sich auf parentēs, ist im Relativsatz Attribut.', 'AB 05'],
+  ['Custōdēs ad rēgem, ___ īrātus erat, vocātī sunt.', ['quī','quem','cui','quae'], 'Die Wächter wurden zum König gerufen, der zornig war.', 'Nom. Sg. m. – bezieht sich auf rēgem, ist im Relativsatz Subjekt.', 'Lektionstext Z. 9'],
+  ['Sī eam rēgī statim reddētis, foedus, ___ rēx vōbīscum fēcit, nōn rumpitur.', ['quod','quem','quae','quī'], 'Wenn ihr sie dem König sofort zurückgebt, wird der Friedensvertrag, den der König mit euch geschlossen hat, nicht gebrochen.', 'Akk. Sg. n. – bezieht sich auf foedus, ist im Relativsatz Objekt.', 'Lektionstext Z. 13–14'],
+  ['Aliter obsidēs, ___ adhūc in castrīs sunt, caedentur.', ['quī','quōs','quae','quibus'], 'Sonst werden die Geiseln, die noch im Lager sind, getötet werden.', 'Nom. Pl. m. – bezieht sich auf obsidēs, ist im Relativsatz Subjekt.', 'Lektionstext Z. 14–15'],
+  ['Rēx cēterās puellās, ___ fūgērunt, apud parentēs manēre sinit.', ['quae','quās','quī','quam'], 'Der König lässt die übrigen Mädchen, die geflohen sind, bei ihren Eltern bleiben.', 'Nom. Pl. f. – bezieht sich auf puellās, ist im Relativsatz Subjekt.', 'Lektionstext Z. 15–16'],
+  ['Dēlige nōnnūllōs obsidēs, ___ lībertātem dare cupis!', ['quibus','quōs','quī','cui'], 'Wähle einige Geiseln aus, denen du die Freiheit geben willst!', 'Dat. Pl. m. – bezieht sich auf obsidēs, ist im Relativsatz Dativobjekt.', 'Lektionstext Z. 19–20'],
+  ['Cloelia et iī obsidēs, ___ dēlēgerat, ad parentēs reductī sunt.', ['quōs','quī','quās','quibus'], 'Cloelia und diejenigen Geiseln, die sie ausgewählt hatte, wurden zu ihren Eltern zurückgebracht.', 'Akk. Pl. m. – bezieht sich auf obsidēs, ist im Relativsatz Objekt.', 'Lektionstext Z. 22'],
+  ['Puella, ___ facinus ā Rōmānīs et Etrūscīs laudābātur, ob virtūtem suam honōre affecta est.', ['cuius','quae','quam','quārum'], 'Das Mädchen, dessen Tat von den Römern und den Etruskern gelobt wurde, wurde wegen seiner Tapferkeit geehrt.', 'Gen. Sg. f. – bezieht sich auf puella, ist im Relativsatz Attribut.', 'Lektionstext Z. 22–24']
 ];
 
 // Mini-Sätze im Format „Drei Fassungen“: Satz, [richtig, falsch, falsch], Hinweis
@@ -334,6 +356,7 @@ const CFG = {
   abfrageTeil: 7,           // Aufgaben je Teil, wenn Vokabeln und Grammatik abgefragt werden
   abfrageEinzel: 10,        // Aufgaben, wenn nur ein Teil abgefragt wird
   abfrageFormen: 2,         // zusätzliche Formen-Aufgaben im Vokabelteil (Stammformen bzw. Genitiv + Genus)
+  abfrageSaetze: 2,         // höchstens so viele Satzaufgaben (Relativpronomen im Satz), wenn auch Formen dran sind
   zielThema: 15,            // Antworten pro Grammatikthema und Woche
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
@@ -387,6 +410,7 @@ function wortSatz(name) {
   if (name === 'z0') return w.slice(0, pos('quī') + 1).map(v => v.i);                          // Z. 1–8 + quī
   if (name === 'z1') return w.slice(0, pos('pūnīre') + 1).map(v => v.i);                       // Z. 1–10
   if (name === 'z2') return w.slice(pos('pūnīre') + 1, pos('trādere') + 1).map(v => v.i);     // Z. 11–24
+  if (name === 'neu') return w.filter(v => !v.f.includes('r')).map(v => v.i);                  // laut Vokabelliste: neue Wörter + neue Bedeutungen, ohne „nur PVP neu“
   return w.map(v => v.i);                                                                     // alle, mit PVP-Stammformen
 }
 // Sonderfall: Abfrage nur mit Grammatik (Thema: Anzahl Aufgaben), z. B. nach den Ferien
@@ -396,7 +420,7 @@ const PLAN = [
   { n: 1, ab: '2026-10-06', bis: '2026-10-26', titel: 'Woche 1 + Herbstferien', woerter: 'z1', wtext: 'Vokabeln Z. 1–10', themen: ['p16', 'p15'], wdh: 0,
     ferien: { bis: '2026-10-25', tage: 7, extra: '14-15+1-4' } },
   { n: 2, ab: '2026-10-27', bis: '2026-11-02', titel: 'Woche 2', woerter: 'z0', wtext: 'Vokabeln Z. 1–8 + quī', themen: ['f16'], wdh: 0 },
-  { n: 3, ab: '2026-11-03', bis: '2026-11-09', titel: 'Woche 3', woerter: 'alle', wtext: 'alle Wörter L. 16 mit PVP-Stammformen', themen: ['s16', 'r16', 'm16'], wdh: 0 },
+  { n: 3, ab: '2026-11-03', bis: '2026-11-09', titel: 'Woche 3', woerter: 'neu', wtext: 'alle Wörter L. 16 laut Vokabelliste (ohne „nur PVP neu“)', themen: ['f16', 'r16'], wdh: 0 },
   { n: 4, ab: '2026-11-10', bis: '2026-11-16', titel: 'Woche 4', woerter: 'alle', wtext: 'alle Wörter L. 16 + 5 aus früheren Lektionen', themen: ['p16', 'r16', 'm16', 's16'], wdh: 5 },
   { n: 5, ab: '2026-11-17', bis: '2026-11-23', titel: 'Woche 5 · Wiederholung', woerter: 'alle', wtext: 'alle Wörter L. 16 + 10 aus früheren Lektionen', themen: ['p16', 'r16', 'm16', 's16', 'p15'], wdh: 10 },
   { n: 6, ab: '2026-11-24', bis: '2026-11-30', titel: 'Woche 6 · Klassenarbeit', woerter: 'alle', wtext: 'alle Wörter L. 16', themen: ['p16', 'r16', 'm16', 's16'], wdh: 0, ka: true }
@@ -525,12 +549,12 @@ const THEMEN = {
   p15: { name: 'Passiv im Präsens, Imperfekt, Futur', l: 15, ids: PRAES.map((_, i) => 'q' + i) }
 };
 const THEMEN_STANDARD = ['p16', 'r16', 'm16'];
-const themaVon = id => ({ v: 'vok', p: 'p16', r: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16' })[id[0]];
+const themaVon = id => ({ v: 'vok', g: 'vok', p: 'p16', r: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16' })[id[0]];
 const gueltig = id => { const n = +id.slice(1); return Number.isInteger(n) && n >= 0 && !!({ v: V, p: PPPV, r: RELS, m: FASS, q: PRAES, s: STAMM, f: RPF }[id[0]] || [])[n]; };
 function relFrage(ri) {
-  const [satz, opts, de, why] = RELS[ri];
+  const [satz, opts, de, why, quelle] = RELS[ri];
   return {
-    id: 'r' + ri, art: 'Relativpronomen', lead: 'Welches Relativpronomen passt?', prompt: satz, lat: true, satz: true,
+    id: 'r' + ri, art: 'Relativpronomen im Satz' + (quelle ? ' · ' + quelle : ''), lead: 'Welches Relativpronomen passt?', prompt: satz, lat: true, satz: true,
     opts: shuffle(opts.map((t, i) => ({ t, ok: i === 0 }))), optLat: true, erk: why + ' – ' + de
   };
 }
@@ -625,6 +649,32 @@ function formenFrage(vi) {
   return { id: 'g' + vi, vi, art: v.t === 'v' ? 'Vokabel · Stammformen' : 'Vokabel · Genitiv und Genus',
     lead: v.t === 'v' ? 'Trage die Stammformen ein.' : 'Trage Genitiv und Genus ein.', prompt: v.lat + (/\bPl\./.test(v.gram) ? ' (Pl.)' : ''), lat: true,
     eingabe: 'formen', felder, sek: 60, erk: `${v.lat}, ${v.gram}` };
+}
+// Relativpronomen-Formen zum Eintippen/Antippen (ab Woche 3): Bilden = Form eintippen, Bestimmen = Kasus, Numerus, Genus antippen.
+// 1 Punkt nur, wenn alles stimmt; beim Bestimmen reicht eine richtige Bestimmung (z. B. quae).
+function rpEingabeFrage(fi, art) {
+  const z = RPF[fi];
+  if ((art || pick(['ue', 'be'])) === 'ue') return { id: 'f' + fi, art: 'Relativpronomen · Form bilden', lead: 'Bilde die Form von quī, quae, quod:', prompt: z.label,
+    eingabe: 'rpb', felder: [{ lab: 'Form', typ: 'la', loes: z.form }], sek: 35, erk: `${z.label} = ${z.form}` };
+  return { id: 'f' + fi, art: 'Relativpronomen · Form bestimmen', lead: 'Bestimme die Form:', prompt: z.form, lat: true,
+    eingabe: 'rpd', felder: [{ lab: 'Kasus', typ: 'wahl', opts: ['Nom.', 'Gen.', 'Dat.', 'Akk.', 'Abl.'] }, { lab: 'Numerus', typ: 'wahl', opts: ['Sg.', 'Pl.'] }, { lab: 'Genus', typ: 'wahl', opts: ['m.', 'f.', 'n.'] }],
+    alle: rpAlle(z.form), sek: 35, erk: `${z.form} kann sein: ${rpAlle(z.form).join(' · ')}` };
+}
+// Wertung aller Eingabe-Aufgaben: { st: 'ok' | 'pr' | 'no', pt, mx }
+function eingabeWerten(f, a) {
+  if (f.eingabe === 'de') { const st = bedeutungPruefen(f.vi, (a && a[0]) || ''); return { st, pt: st === 'ok' ? 1 : 0, mx: 1 }; }
+  if (f.eingabe === 'formen') { const ok = formenWerten(f, a); const mx = ok.length / 2, pt = ok.filter(Boolean).length / 2; return { st: pt === mx ? 'ok' : 'no', pt, mx }; }
+  if (f.eingabe === 'rpb') { const ok = !!(a && a[0]) && laGleich(a[0], f.felder[0].loes); return { st: ok ? 'ok' : 'no', pt: ok ? 1 : 0, mx: 1 }; }
+  if (f.eingabe === 'rpd') { const ok = !!a && a.every(Boolean) && f.alle.includes(a.join(' ')); return { st: ok ? 'ok' : 'no', pt: ok ? 1 : 0, mx: 1 }; }
+  return { st: 'no', pt: 0, mx: 1 };
+}
+// Lösungszeile nach dem Abgeben bzw. im Tipp-Training
+function eingabeLoesungHTML(f, a, w) {
+  if (f.eingabe === 'de') return `<span class="lat">${esc(f.prompt)}</span> · deine Antwort: <i>${esc((a && a[0]) || '–')}</i><br><b>${esc(V[f.vi].de)}</b>`;
+  if (f.eingabe === 'formen') { const ok = formenWerten(f, a); return `<span class="lat">${esc(f.prompt)}</span> · ${zahl(w.pt)} von ${zahl(w.mx)} Punkten<br>${f.felder.map((fe, j) => `${esc(fe.lab)}: <b class="${fe.typ === 'la' ? 'lat' : ''}">${esc(loesText(fe))}</b>${ok[j] ? ' ✓' : ` <span class="small">(du: ${esc((a && a[j]) || '–')})</span>`}`).join('<br>')}`; }
+  if (f.eingabe === 'rpb') return `${esc(f.prompt)} = <b class="lat">${esc(f.felder[0].loes)}</b> <span class="small">(du: ${esc((a && a[0]) || '–')})</span>`;
+  if (f.eingabe === 'rpd') return `<span class="lat">${esc(f.prompt)}</span> kann sein: <b>${esc(f.alle.join(' · '))}</b> <span class="small">(du: ${esc(a && a.some(Boolean) ? a.map(x => x || '?').join(' ') : '–')})</span>`;
+  return '';
 }
 // je Kästchen ½ Punkt; Längenzeichen und Großschreibung zählen nicht, sonst buchstabengenau
 const laGleich = (x, a) => plain(String(x)).replace(/\s+/g, '') === plain(a);
@@ -757,9 +807,22 @@ function teilPunkte(e, teil) {
   const p = roh + (bonusTeil(e) === teil ? 1 : 0);
   return { p: Math.min(max, p), roh, max, bonus: bonusTeil(e) === teil, offen: teil === 'v' ? prOffen(e) : 0 };
 }
+// Prozent je Teil (mit Bonuspunkt); „vorläufig“, solange eingetippte Antworten noch nicht geprüft sind
+const teilProzent = (e, k) => { const t = teilPunkte(e, k); return t ? Math.round(t.p / t.max * 100) : null; };
+const gesamtProzent = e => Math.round(punkte(e) / e.max * 100);
+// Notenschlüssel (Christoph, 2.11.2026): 60 % = gerade noch 4, darüber in 10er-Schritten; 5 ab 30 %
+const NOTEN = [[1, 90], [2, 80], [3, 70], [4, 60], [5, 30], [6, 0]];
+function notenTabelleHTML() {
+  return `<div class="tafel"><h3>Was bedeutet meine Prozentzahl?</h3><p class="small">Vokabeln und Grammatik bekommen je eine eigene Prozentzahl. So entspricht sie einer Note:</p>
+  <div class="tabwrap"><table class="noten"><thead><tr><th>Note</th><th class="zahl">Prozent</th></tr></thead><tbody>
+  ${NOTEN.map(([n, ab], i) => `<tr><td><b>${n}</b></td><td class="zahl">${i === 0 ? 'ab ' + ab + ' %' : n === 6 ? 'unter ' + NOTEN[i - 1][1] + ' %' : ab + ' – ' + (NOTEN[i - 1][1] - 1) + ' %'}</td></tr>`).join('')}
+  </tbody></table></div><p class="small muted">60 % sind gerade noch eine 4. Die Prozentzahl wird auf ganze Zahlen gerundet.</p></div>`;
+}
 function teileText(e, kurz) {
   if (!hatTeile(e)) return '';
-  return [['v', kurz ? 'Vok' : 'Vokabeln'], ['g', kurz ? 'Gr' : 'Grammatik']].map(([k, n]) => { const t = teilPunkte(e, k); return t ? `${n} ${zahl(t.roh)}${t.bonus ? '+1' : ''}/${zahl(t.max)}${t.offen ? (kurz ? ` (${t.offen}?)` : ` (+ ${t.offen} ${t.offen > 1 ? 'werden' : 'wird'} geprüft)`) : ''}` : ''; }).filter(Boolean).join(' · ');
+  return [['v', kurz ? 'Vok' : 'Vokabeln'], ['g', kurz ? 'Gr' : 'Grammatik']].map(([k, n]) => { const t = teilPunkte(e, k); if (!t) return ''; const pz = Math.round(t.p / t.max * 100);
+    return kurz ? `${n} ${pz} %${t.offen ? '*' : ''} (${zahl(t.roh)}${t.bonus ? '+1' : ''}/${zahl(t.max)})`
+      : `${n} ${pz} %${t.offen ? ' (vorläufig)' : ''} · ${zahl(t.roh)}${t.bonus ? '+1' : ''} von ${zahl(t.max)} Punkten${t.offen ? ` (+ ${t.offen} ${t.offen > 1 ? 'werden' : 'wird'} geprüft)` : ''}`; }).filter(Boolean).join(kurz ? ' · ' : '<br>');
 }
 const abfrageSek = n => Math.max(1, Math.round(n * CFG.abfrageSekProFrage / 60)) * 60;
 // Montagsabfrage: Zeit je Aufgabe (Bedeutung eintippen 40 s, Formen 60 s, sonst 35 s), aufgerundet auf volle Minuten
@@ -844,7 +907,7 @@ function zeige(tab) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('ein-feld')) {
     e.preventDefault(); const alle = $$('.ein-feld'); const i = alle.indexOf(e.target);
-    if (i < alle.length - 1) alle[i + 1].focus(); else { const w = $('#abf-weiter'); if (w) w.click(); }
+    if (i < alle.length - 1) alle[i + 1].focus(); else { const w = $('#abf-weiter') || $('#ein-ok'); if (w) w.click(); }
     return;
   }
   if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('pl-ein')) return;
@@ -941,7 +1004,7 @@ const wochenCode = (wk, l, ids, th, opt = []) => codeBauen(['W', wk, l, ids.join
 function ergebnisCode(datum) {
   const t = S.tests[datum]; const w = wochenSumme(S, weekKey(datum));
   const teile = hatTeile(t) ? [t.pv, t.mv, t.pg, t.mg] : [];
-  if (t.pr && t.pr.length) teile.push(encodeURIComponent(JSON.stringify(t.pr.map(x => [x.id, x.txt]))));
+  if (teile.length) teile.push(t.pr && t.pr.length ? encodeURIComponent(JSON.stringify(t.pr.map(x => [x.id, x.txt]))) : '', probeAnzahl(datum));
   return codeBauen(['R', S.nr, datum, w.ziel, w.min, w.n, t.p, t.max, (t.miss || []).slice(0, 6).join('.'), t.ft === undefined ? '' : t.ft, t.fb || 0, ...teile]);
 }
 
@@ -1005,6 +1068,7 @@ RENDER.ueben = () => {
     <button class="kachel haupt" data-akt="spielMauer"><b>Mauerbau</b><span>Jede richtige Antwort setzt einen Stein in die Stadtmauer. Mit Zeitdruck und Bestenliste.</span><span class="mini-mauer" aria-hidden="true">${'<i></i>'.repeat(15)}</span></button>
     <button class="kachel" data-akt="schnellrunde"><b>Schnellrunde</b><span>10 gemischte Fragen aus deinen Vokabeln und der Grammatik der Woche.</span></button>
     <button class="kachel" data-akt="kartei"><b>Karteikasten</b><span>Karte umdrehen und selbst einschätzen. Was sitzt, wandert ins nächste Fach.</span></button>
+    <button class="kachel" data-akt="tippTraining" style="grid-column:1/-1"><b>Tipp-Training · wie in der Abfrage</b><span>Bedeutungen, Stammformen bzw. Genitiv und Genus${aktiveThemen().includes('f16') ? ' und Formen des Relativpronomens' : ''} eintippen – genau so, wie es in der Montagsabfrage drankommt.</span></button>
     ${th.length ? `<button class="kachel" data-akt="formen" style="grid-column:1/-1"><b>Grammatik-Training</b><span>${th.map(t => esc(THEMEN[t].name)).join(' · ')}</span></button>` : ''}
     ${S.deck && S.deck.extra && S.deck.extra.length ? `<button class="kachel" data-akt="wdhRunde" style="grid-column:1/-1"><b>${S.deck.ferien ? 'Ferien-Wiederholung' : 'Wiederholung'}</b><span>Vokabeln aus ${esc(wdhName(S.deck))} · 10 Fragen · freiwillig${S.deck.ferien ? ', zählt fürs Ferienprogramm' : ''}</span></button>` : ''}
     <button class="kachel" data-akt="plenumStart" style="grid-column:1/-1"><b>Plenum · im Unterricht</b><span>Formen von ${esc(PLENUM[PLENUM_STANDARD].titel)} gemeinsam zusammentragen – Schritt für Schritt mit der Tafel</span></button>
@@ -1018,7 +1082,7 @@ function bonusText(t) {
 }
 RENDER.abfrage = () => {
   const k = kurztestKarteHTML(); const oben = (S.kurz && S.kurz[dkey()]) || parseD(dkey()).getDay() !== 1;
-  return oben ? k + montagHTML() : montagHTML() + k;
+  return (oben ? k + montagHTML() : montagHTML() + k) + probeKarteHTML() + notenTabelleHTML();
 };
 function kurztestKarteHTML() {
   const k = S.kurz && S.kurz[dkey()];
@@ -1030,7 +1094,7 @@ function kurztestKarteHTML() {
 }
 function montagHTML() {
   const mo = abfrageMontag(); const t = S.tests[mo]; const d = abfrageDeck(mo);
-  if (t) return `<div class="tafel"><span class="eyebrow">Montagsabfrage · ${fmtD(mo)}</span><h2>Ergebnis: <span class="num">${zahl(t.p)} von ${zahl(t.max)}</span> Punkten</h2>${hatTeile(t) ? `<p class="num"><b>${esc(teileText(t))}</b></p>` : ''}${bonusText(t)}
+  if (t) return `<div class="tafel"><span class="eyebrow">Montagsabfrage · ${fmtD(mo)}</span>${hatTeile(t) ? `<h2 class="num">${teileText(t)}</h2>` : `<h2>Ergebnis: <span class="num">${zahl(t.p)} von ${zahl(t.max)}</span> Punkten · ${gesamtProzent(t)} %</h2>`}${bonusText(t)}
     <p>Zeig jetzt deiner Lehrkraft deinen Code.</p><button class="knopf" data-tab="code">Mein Code</button></div>` + verlaufHTML();
   if (d && d.ka && d.week === mo) return `<div class="tafel"><span class="eyebrow">Keine Abfrage</span><h2>Am ${fmtD(mo)} schreibt ihr die Klassenarbeit</h2>
     <p>Übe bis dahin mit Cista – am besten auch mit dem Fehler-Training.</p></div>` + verlaufHTML();
@@ -1044,9 +1108,9 @@ function montagHTML() {
 function verlaufHTML() {
   const ds = Object.keys(S.tests).sort().reverse();
   if (!ds.length) return '';
-  const tz = (e, k) => { const x = teilPunkte(e, k); return x ? `${zahl(x.roh)}${x.bonus ? '+1' : ''}/${zahl(x.max)}` : '–'; };
+  const tz = (e, k) => { const x = teilPunkte(e, k); return x ? `<b>${Math.round(x.p / x.max * 100)} %${x.offen ? '*' : ''}</b><span class="unter">${zahl(x.roh)}${x.bonus ? '+1' : ''}/${zahl(x.max)}</span>` : '–'; };
   return `<div class="tafel"><h3>Bisherige Abfragen</h3><div class="tabwrap"><table><thead><tr><th>Datum</th><th class="zahl">Vokabeln</th><th class="zahl">Grammatik</th><th class="zahl">Gesamt</th><th class="zahl">Übungstage</th><th class="zahl">Minuten</th></tr></thead><tbody>
-  ${ds.map(d => { const w = wochenSumme(S, weekKey(d)); const e = S.tests[d]; return `<tr><td>${fmtD(d)}</td><td class="zahl">${tz(e, 'v')}</td><td class="zahl">${tz(e, 'g')}</td><td class="zahl">${punkteText(e)}</td><td class="zahl">${w.ziel}</td><td class="zahl">${w.min}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+  ${ds.map(d => { const w = wochenSumme(S, weekKey(d)); const e = S.tests[d]; return `<tr><td>${fmtD(d)}</td><td class="zahl">${tz(e, 'v')}</td><td class="zahl">${tz(e, 'g')}</td><td class="zahl">${punkteText(e)}</td><td class="zahl">${w.ziel}</td><td class="zahl">${w.min}</td></tr>`; }).join('')}</tbody></table></div>${ds.some(d => prOffen(S.tests[d])) ? '<p class="small muted">* vorläufig: Deine Lehrkraft prüft noch eingetippte Antworten. Das endgültige Ergebnis sagt sie dir.</p>' : ''}</div>`;
 }
 RENDER.woche = () => {
   const wk = weekKey(); const w = wochenSumme(S, wk);
@@ -1067,7 +1131,7 @@ RENDER.code = () => {
   const c = ergebnisCode(d); const t = S.tests[d]; const w = wochenSumme(S, weekKey(d));
   return `<div class="tafel" style="justify-items:center;text-align:center"><span class="eyebrow">Mein Code · ${fmtD(d)}</span><h2>Zeig diesen Code deiner Lehrkraft</h2>
   <div class="qr gross">${qrSvg(c)}</div>
-  <p class="num"><b>${hatTeile(t) ? esc(teileText(t)) : t.p + ' von ' + t.max + ' Punkten' + (t.fb ? ' + 1 Bonuspunkt' : '')}</b> · ${t.ft !== undefined ? t.ft + ' Übungstage im Ferienprogramm' : w.ziel + ' Übungstage'} · ${w.min} Minuten</p>
+  <p class="num"><b>${hatTeile(t) ? teileText(t) : t.p + ' von ' + t.max + ' Punkten' + (t.fb ? ' + 1 Bonuspunkt' : '')}</b> · ${t.ft !== undefined ? t.ft + ' Übungstage im Ferienprogramm' : w.ziel + ' Übungstage'} · ${w.min} Minuten</p>
   <div class="reihe" style="justify-content:center"><button class="knopf klein leer" data-akt="codeKopieren" data-code="${esc(c)}">Code-Text kopieren</button>
   ${TESTMODUS ? `<button class="knopf klein gold" data-akt="testInListe" data-code="${esc(c)}">In die Lehrerliste übernehmen (Test)</button>` : ''}</div></div>`;
 };
@@ -1116,6 +1180,45 @@ function rundeAntwort(i) {
   $('#rueck').innerHTML = rueckHTML(s.f, ok);
   $('#weiter').innerHTML = `<button class="knopf" data-akt="rundeWeiter">${s.nr + 1 >= s.max ? 'Auswerten' : 'Weiter'}</button>`;
   s.nr++;
+}
+// Tipp-Training (ab 3.11.2026): genau die Aufgaben der Abfrage zum Üben – Bedeutung, Stammformen/Genitiv+Genus, Relativpronomen-Formen.
+// Nicht sicher erkannte Bedeutungen entscheiden die Schüler selbst („war richtig“ / „war falsch“).
+function tippStarten() {
+  SITZ = { art: 'tipp', nr: 0, max: 10, richtig: 0, zuletzt: [] };
+  ovOeffnen('Tipp-Training'); tippFrage();
+}
+function tippArten() {
+  const a = ['bed']; if (deckIds().some(i => formenFelder(V[i]))) a.push('form'); if (aktiveThemen().includes('f16')) a.push('rp'); return a;
+}
+function tippFrage() {
+  const s = SITZ; if (s.nr >= s.max) return rundeEnde();
+  const arten = tippArten(); const art = Math.random() < .5 ? 'bed' : pick(arten);
+  let f;
+  if (art === 'form') { const id = naechste(deckIds().filter(i => formenFelder(V[i])).map(i => 'g' + i), s.zuletzt); f = formenFrage(+id.slice(1)); }
+  else if (art === 'rp') { const id = naechste(THEMEN.f16.ids, s.zuletzt); f = rpEingabeFrage(+id.slice(1)); }
+  else { const id = vokZiehen(s.zuletzt); f = bedeutungFrage(+id.slice(1)); }
+  s.f = f; s.genus = {}; s.zuletzt = [f.id, ...s.zuletzt].slice(0, 4); s.geprueft = false;
+  $('#ov-info').textContent = `Aufgabe ${s.nr + 1} von ${s.max}`;
+  $('#ov-inhalt').innerHTML = `<div class="kopfzeile"><span class="eyebrow">${esc(f.art)}</span><span class="small muted">wie in der Montagsabfrage</span></div>` + eingabeHTML(f, `<div id="rueck"></div><div id="weiter"><button class="knopf" data-akt="tippPruefen" id="ein-ok">Prüfen</button></div>`);
+  const e = $('.ein-feld'); if (e) e.focus();
+}
+function tippPruefen() {
+  const s = SITZ; if (!s || s.geprueft) return; s.geprueft = true;
+  const a = eingabeLesen(s.f); const w = eingabeWerten(s.f, a); s.a = a;
+  $$('#ov-inhalt .ein-feld, #ov-inhalt .genus').forEach(x => { x.disabled = true; });
+  if (w.st === 'pr') {
+    const alt = s.f.eingabe === 'de' && antwortTeile(a[0]).some(x => bedeutungen(V[s.f.vi]).alt.some(b => deGleich(x, b)));
+    $('#rueck').innerHTML = `<div class="rueck pruef">${eingabeLoesungHTML(s.f, a, w)}<br><b>${alt ? 'Das ist die Bedeutung, die du schon kanntest – in L. 16 kommt eine neue dazu. Zählt deine Antwort trotzdem?' : 'Cista kennt deine Antwort nicht. War sie richtig?'}</b></div>`;
+    $('#weiter').innerHTML = `<div class="reihe"><button class="knopf" data-akt="tippSelbst" data-ok="1">Ja, war richtig</button><button class="knopf leer" data-akt="tippSelbst" data-ok="0">Nein, war falsch</button></div>`;
+    return;
+  }
+  tippErgebnis(w.st === 'ok', w);
+}
+function tippErgebnis(ok, w) {
+  const s = SITZ; protokoll(s.f.id, ok); if (ok) s.richtig++;
+  $('#rueck').innerHTML = `<div class="rueck ${ok ? 'ok' : 'no'}"><b>${ok ? 'Richtig.' : w && w.pt ? 'Teilweise richtig.' : 'Leider nicht.'}</b><br>${eingabeLoesungHTML(s.f, s.a, w || { pt: ok ? 1 : 0, mx: 1 })}</div>`;
+  $('#weiter').innerHTML = `<button class="knopf" data-akt="tippWeiter" id="ein-ok">${s.nr + 1 >= s.max ? 'Auswerten' : 'Weiter'}</button>`;
+  s.nr++; const b = $('#ein-ok'); if (b) b.focus();
 }
 function rundeEnde() {
   const s = SITZ; const w = wochenSumme(S, weekKey()); const heute = w.tage.find(t => t.k === dkey());
@@ -1292,8 +1395,11 @@ function abfrageStart() {
   if (S.tests[abfrageMontag()]) return;
   const fragen = abfrageZusammenstellen(abfrageDeck());
   SITZ = { abfrage: true, fragen, nr: 0, antw: [], ende: Date.now() + fragenSek(fragen) * 1000, fertig: false };
-  ovOeffnen('Montagsabfrage'); abfrageFrage();
+  ovOeffnen('Montagsabfrage'); abfrageFrage(); abfrageUhr();
+}
+function abfrageUhr() {
   SITZ.timer = setInterval(() => {
+    if (!SITZ) return;
     const rest = Math.max(0, SITZ.ende - Date.now()); const m = Math.floor(rest / 60000), sek = Math.floor(rest / 1000) % 60;
     const info = $('#ov-info'); if (info) info.textContent = `Frage ${Math.min(SITZ.nr + 1, SITZ.fragen.length)} von ${SITZ.fragen.length} · ${m}:${pad(sek)}`;
     if (rest <= 0) abfrageAbgeben();
@@ -1308,17 +1414,20 @@ function abfragePlan(d) {
   const nV = vok ? (th.length ? CFG.abfrageTeil : CFG.abfrageEinzel) : 0;
   const nF = vok ? Math.min(CFG.abfrageFormen, deckIds(d).filter(i => formenFelder(V[i])).length) : 0;
   // Grammatikaufgaben reihum auf die Themen verteilen; Mini-Sätze höchstens einmal
-  const anteil = {}; const reihum = th.filter(x => x !== 'm16'); let rest = nG;
+  const anteil = {}; let reihum = th.filter(x => x !== 'm16'); let rest = nG;
   if (th.includes('m16') && rest) { anteil.m16 = 1; rest--; }
+  // Sätze nur als Ergänzung, wenn auch Formen abgefragt werden (Christoph: 5 Formen + 2 Sätze)
+  if (th.includes('r16') && th.includes('f16') && rest) { anteil.r16 = Math.min(CFG.abfrageSaetze, rest); rest -= anteil.r16; reihum = reihum.filter(x => x !== 'r16'); }
   if (!reihum.length && rest) { anteil.m16 = (anteil.m16 || 0) + rest; rest = 0; }
   for (let i = 0; i < rest; i++) { const x = reihum[i % reihum.length]; anteil[x] = (anteil[x] || 0) + 1; }
   return { nV, nF, gram: Object.entries(anteil) };
 }
 const abfrageAnzahl = d => { const p = abfragePlan(d); return p.nV + (p.nF || 0) + p.gram.reduce((a, [, n]) => a + n, 0); };
 const abfrageDauer = d => { const p = abfragePlan(d); const nG = p.gram.reduce((a, [, n]) => a + n, 0); return Math.max(1, Math.ceil((p.nV * 40 + (p.nF || 0) * 60 + nG * CFG.abfrageSekProFrage) / 60)) * 60; };
+const THEMA_ABFRAGE = { f16: 'Formen des Relativpronomens (bilden: eintippen · bestimmen: Kasus, Numerus, Genus antippen)', r16: 'Relativpronomen im Satz (Sätze aus AB 04, AB 05 und dem Lektionstext, zum Ankreuzen)' };
 function abfrageZusammenstellen(d) {
   const p = abfragePlan(d); const gram = [];
-  p.gram.forEach(([th, n]) => { const ids = shuffle(THEMEN[th].ids); for (let i = 0; i < n; i++) gram.push(frageAus(ids[i % ids.length], i % 2 ? 'be' : 'ue')); });
+  p.gram.forEach(([th, n]) => { const ids = shuffle(THEMEN[th].ids); for (let i = 0; i < n; i++) { const id = ids[i % ids.length], art = i % 2 ? 'be' : 'ue'; gram.push(id[0] === 'f' ? rpEingabeFrage(+id.slice(1), art) : frageAus(id, art)); } });
   gram.forEach(f => { f.teil = 'g'; });
   // Formen zuerst wählen (möglichst ein Verb und ein Substantiv), Bedeutungen aus den übrigen Wörtern
   const kand = shuffle(deckIds(d).filter(i => formenFelder(V[i])));
@@ -1334,18 +1443,18 @@ function abfrageAufbau(d) {
   if (p.sonder) return p.gram.map(([th, n]) => `${n} Aufgaben ${THEMEN[th].name}`).join(' und ') + ' – diesmal keine Vokabeln';
   const teile = [];
   if (p.nV) teile.push(`${p.nV} Vokabeln aus deinen Karten der Woche (deutsche Bedeutung eintippen)${p.nF ? ` und ${p.nF} Formen-Aufgaben (Stammformen bzw. Genitiv und Genus eintippen, je Form ½ Punkt)` : ''}`);
-  if (nG) teile.push(`${nG} Grammatikaufgaben (${p.gram.map(([th]) => THEMEN[th].name).join(', ')})`);
+  if (nG) teile.push(`${nG} Grammatikaufgaben: ${p.gram.map(([th, n]) => n + ' × ' + (THEMA_ABFRAGE[th] || THEMEN[th].name)).join(', ')}`);
   return teile.join(' und ') + '. Vokabeln und Grammatik bekommen getrennte Ergebnisse';
 }
 function eingabeHTML(f, extra = '') {
-  const feld = (fe, i) => fe.typ === 'genus'
-    ? `<div class="feld ein-zeile"><label>${esc(fe.lab)}</label><div class="genus-wahl">${['m', 'f', 'n'].map(g => `<button class="opt genus" data-akt="genusWahl" data-i="${i}" data-g="${g}">${g}.</button>`).join('')}</div></div>`
+  const feld = (fe, i) => fe.typ === 'genus' || fe.typ === 'wahl'
+    ? `<div class="feld ein-zeile"><label>${esc(fe.lab)}</label><div class="genus-wahl">${(fe.typ === 'genus' ? ['m', 'f', 'n'] : fe.opts).map(g => `<button class="opt genus" data-akt="genusWahl" data-i="${i}" data-g="${esc(g)}">${esc(fe.typ === 'genus' ? g + '.' : g)}</button>`).join('')}</div></div>`
     : `<div class="feld ein-zeile"><label for="ein-${i}">${esc(fe.lab)}</label><input id="ein-${i}" class="ein-feld ${fe.typ === 'la' ? 'lat' : ''}" data-i="${i}" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next"></div>`;
   return `<div class="frage"><span class="lead">${esc(f.lead)}</span><div class="prompt">${esc(f.prompt)}</div>${f.gram && f.eingabe === 'de' ? `<div class="gram">${esc(f.gram)}</div>` : ''}</div>
-  <div class="eingaben">${f.felder.map(feld).join('')}</div>${f.eingabe === 'formen' ? '<p class="small muted">Längenzeichen musst du nicht tippen.</p>' : ''}${extra}`;
+  <div class="eingaben">${f.felder.map(feld).join('')}</div>${f.eingabe === 'formen' || f.eingabe === 'rpb' ? '<p class="small muted">Längenzeichen musst du nicht tippen.</p>' : ''}${extra}`;
 }
 // liest die Eingaben der aktuellen Aufgabe aus
-function eingabeLesen(f) { return f.felder.map((fe, i) => fe.typ === 'genus' ? (SITZ.genus && SITZ.genus[i]) || '' : ((document.getElementById('ein-' + i) || {}).value || '').trim()); }
+function eingabeLesen(f) { return f.felder.map((fe, i) => fe.typ === 'genus' || fe.typ === 'wahl' ? (SITZ.genus && SITZ.genus[i]) || '' : ((document.getElementById('ein-' + i) || {}).value || '').trim()); }
 function abfrageFrage() {
   const s = SITZ; if (s.nr >= s.fragen.length) return abfrageAbgeben();
   const f = s.fragen[s.nr]; s.genus = {};
@@ -1362,6 +1471,33 @@ function abfrageWahl(i) {
 function abfrageWeiter() {
   const s = SITZ; const f = s.fragen[s.nr];
   s.antw[s.nr] = f && f.eingabe ? eingabeLesen(f) : s.wahl; s.wahl = undefined; s.nr++; abfrageFrage();
+}
+// Probetest (ab 3.11.2026): gleicher Aufbau und gleiche Zeit wie die Montagsabfrage, beliebig oft, zählt nicht für die Note.
+// Antworten zählen als Übungszeit; die Anzahl der Probetests geht mit dem Ergebnis-Code an die Lehrkraft.
+function probeStart() {
+  const fragen = abfrageZusammenstellen(S.deck);
+  SITZ = { abfrage: true, probe: true, fragen, nr: 0, antw: [], ende: Date.now() + fragenSek(fragen) * 1000, fertig: false };
+  ovOeffnen('Probetest · zählt nicht'); abfrageFrage(); abfrageUhr();
+}
+const probeAnzahl = (bis, von = addDays(bis, -6)) => Object.entries(S.probe || {}).filter(([k]) => k >= von && k <= bis).reduce((a, [, n]) => a + n, 0);
+function probeAbgeben(s) {
+  const { p, tp, tm, pr } = abfrageWerten(s);
+  s.fragen.forEach((f, i) => { if (s.antw[i] !== undefined && s.wertung[i].st !== 'pr') protokoll(f.id, s.wertung[i].st === 'ok'); });
+  const heute = dkey(); S.probe = S.probe || {}; S.probe[heute] = (S.probe[heute] || 0) + 1; speichereS();
+  const pz = k => tm[k] ? `${k === 'v' ? 'Vokabeln' : 'Grammatik'} ${Math.round(tp[k] / tm[k] * 100)} %` : '';
+  const liste = s.fragen.map((f, i) => fehlerZeile(s, f, i, 'Prüfe selbst: Passt deine Antwort zur Lösung? (Im echten Test entscheidet deine Lehrkraft.)')).join('');
+  $('#ov-info').textContent = '';
+  $('#ov-inhalt').innerHTML = `<div class="tafel" style="text-align:center;justify-items:center"><span class="eyebrow">Probetest · zählt nicht für die Note</span><h2 class="num">${[pz('v'), pz('g')].filter(Boolean).join(' · ')}</h2>
+  <p class="small">${zahl(p)} von ${zahl(tm.v + tm.g)} Punkten${pr.length ? ` · ${pr.length} Antwort${pr.length > 1 ? 'en' : ''} (gelb) prüfst du selbst – sie sind hier nicht mitgezählt` : ''}</p>
+  <div class="reihe" style="justify-content:center"><button class="knopf" data-akt="probeStart">Noch ein Probetest</button><button class="knopf leer" data-akt="ovZu">Fertig</button></div></div>
+  ${liste ? `<div class="tafel"><h3>Das übst du noch einmal</h3>${liste}</div>` : '<div class="hinweis">Alles richtig. Optime!</div>'}`;
+}
+function probeKarteHTML() {
+  const d = S.deck; if (d && d.ka && d.week === abfrageMontag()) return '';
+  const anz = abfrageAnzahl(d), n = probeAnzahl(dkey());
+  return `<div class="tafel"><span class="eyebrow">Zum Üben · zählt nicht für die Note</span><h3>Probetest</h3>
+  <p>Genau wie die Montagsabfrage: ${anz} Fragen · ${abfrageDauer(d) / 60} Minuten, mit deinen Karten und der Grammatik dieser Woche. So oft du willst – die Aufgaben werden jedes Mal neu gemischt.</p>
+  ${n ? `<p class="small">In den letzten sieben Tagen <b>${n}×</b> geschrieben.</p>` : ''}<div><button class="knopf leer" data-akt="probeStart">Probetest starten</button></div></div>`;
 }
 // Kurztest: nur Fragen aus einem Thema, zählt nicht für die Note; schickt die Übungszeit seit einem Datum mit
 function kurztestFragen(th, n, nurPq) {
@@ -1404,21 +1540,32 @@ function kurzAbgeben(s) {
   <div class="reihe" style="justify-content:center"><button class="knopf leer" data-akt="ovZu">Fertig</button>${TESTMODUS ? `<button class="knopf klein gold" data-akt="testInListe" data-code="${esc(code)}">In die Lehrerliste übernehmen (Test)</button>` : ''}</div></div>
   ${miss.length ? `<div class="tafel"><h3>Das übst du noch einmal</h3>${s.fragen.map((f, i) => { const a = s.antw[i]; if (a !== undefined && f.opts[a].ok) return ''; return `<div class="rueck no"><span class="lat">${esc(f.prompt)}</span><br><b>${esc(f.opts.find(o => o.ok).t)}</b>${a === undefined ? ' · nicht beantwortet' : ''}</div>`; }).join('')}</div>` : '<div class="hinweis">Alles richtig. Optime!</div>'}`;
 }
+// eine Zeile „Das übst du noch einmal“ (leer, wenn richtig)
+function fehlerZeile(s, f, i, prText) {
+  const a = s.antw[i], w = s.wertung[i]; if (w.st === 'ok') return '';
+  if (f.eingabe) return `<div class="rueck ${w.st === 'pr' ? 'pruef' : 'no'}">${eingabeLoesungHTML(f, a, w)}${w.st === 'pr' ? `<br><span class="small">${prText}</span>` : ''}</div>`;
+  return `<div class="rueck no"><span class="lat">${esc(f.prompt)}</span><br><b>${esc(f.opts.find(o => o.ok).t)}</b>${a === undefined ? ' · nicht beantwortet' : ''}</div>`;
+}
+// Wertung einer Abfrage (echte Abfrage und Probetest)
+function abfrageWerten(s) {
+  let p = 0; const miss = [], pr = []; const tp = { v: 0, g: 0 }, tm = { v: 0, g: 0 };
+  s.wertung = s.fragen.map((f, i) => {
+    const a = s.antw[i]; const k = f.teil || (f.id[0] === 'v' ? 'v' : 'g');
+    let w;
+    if (f.eingabe) { w = eingabeWerten(f, a); if (w.st === 'pr') pr.push({ id: f.id, txt: ((a && a[0]) || '').slice(0, 60) }); }
+    else { const ok = a !== undefined && f.opts[a].ok; w = { st: ok ? 'ok' : 'no', pt: ok ? 1 : 0, mx: 1 }; }
+    tm[k] += w.mx; tp[k] += w.pt; p += w.pt; if (w.st === 'no' || (w.pt < w.mx && w.st !== 'pr')) miss.push(f.id);
+    return w;
+  });
+  return { p, miss, pr, tp, tm };
+}
 function abfrageAbgeben() {
   const s = SITZ; if (!s || s.fertig) return; s.fertig = true; clearInterval(s.timer);
   if (s.kurz) return kurzAbgeben(s);
   // Zeit abgelaufen: Eingaben der offenen Aufgabe noch übernehmen
   const off = s.fragen[s.nr]; if (off && off.eingabe && s.antw[s.nr] === undefined && $('#ov-inhalt .eingaben')) s.antw[s.nr] = eingabeLesen(off);
-  let p = 0; const miss = [], pr = []; const tp = { v: 0, g: 0 }, tm = { v: 0, g: 0 };
-  s.wertung = s.fragen.map((f, i) => {
-    const a = s.antw[i]; const k = f.teil || (f.id[0] === 'v' ? 'v' : 'g');
-    let pt = 0, mx = 1, st;
-    if (f.eingabe === 'de') { const txt = (a && a[0]) || ''; st = bedeutungPruefen(f.vi, txt); if (st === 'ok') pt = 1; if (st === 'pr') pr.push({ id: f.id, txt: txt.slice(0, 60) }); }
-    else if (f.eingabe === 'formen') { const ok = formenWerten(f, a); mx = ok.length / 2; pt = ok.filter(Boolean).length / 2; st = pt === mx ? 'ok' : 'no'; }
-    else { st = a !== undefined && f.opts[a].ok ? 'ok' : 'no'; pt = st === 'ok' ? 1 : 0; }
-    tm[k] += mx; tp[k] += pt; p += pt; if (st === 'no' || (f.eingabe === 'formen' && pt < mx)) miss.push(f.id);
-    return { st, pt, mx };
-  });
+  if (s.probe) return probeAbgeben(s);
+  const { p, miss, pr, tp, tm } = abfrageWerten(s);
   const heute = dkey(), mo = abfrageMontag(), d = abfrageDeck(mo);
   const max = tm.v + tm.g;
   const t = S.tests[mo] = { p, max, miss, am: heute, pv: tp.v, mv: tm.v, pg: tp.g, mg: tm.g };
@@ -1426,14 +1573,8 @@ function abfrageAbgeben() {
   if (d && d.ferien && mo > d.ferien.bis) { t.ft = ferienTage(d.ferien); t.fb = t.ft >= d.ferien.tage ? 1 : 0; }
   speichereS();
   $('#ov-info').textContent = '';
-  const zeile = (f, i) => {
-    const a = s.antw[i], w = s.wertung[i]; if (w.st === 'ok') return '';
-    if (f.eingabe === 'de') return `<div class="rueck ${w.st === 'pr' ? 'pruef' : 'no'}"><span class="lat">${esc(f.prompt)}</span> · deine Antwort: <i>${esc((a && a[0]) || '–')}</i><br><b>${esc(V[f.vi].de)}</b>${w.st === 'pr' ? '<br><span class="small">Deine Lehrkraft prüft diese Antwort.</span>' : ''}</div>`;
-    if (f.eingabe === 'formen') { const ok = formenWerten(f, a); return `<div class="rueck no"><span class="lat">${esc(f.prompt)}</span> · ${zahl(w.pt)} von ${zahl(w.mx)} Punkten<br>${f.felder.map((fe, j) => `${esc(fe.lab)}: <b class="${fe.typ === 'la' ? 'lat' : ''}">${esc(loesText(fe))}</b>${ok[j] ? ' ✓' : ` <span class="small">(du: ${esc((a && a[j]) || '–')})</span>`}`).join('<br>')}</div>`; }
-    return `<div class="rueck no"><span class="lat">${esc(f.prompt)}</span><br><b>${esc(f.opts.find(o => o.ok).t)}</b>${a === undefined ? ' · nicht beantwortet' : ''}</div>`;
-  };
-  const liste = s.fragen.map(zeile).join('');
-  $('#ov-inhalt').innerHTML = `<div class="tafel" style="text-align:center;justify-items:center"><span class="eyebrow">Abgegeben · ${fmtD(heute)}</span><h2 class="num">${esc(teileText(t))}</h2><p class="small">Gesamt ${zahl(p)} von ${zahl(max)}${pr.length ? ` · ${pr.length} Antwort${pr.length > 1 ? 'en prüft' : ' prüft'} deine Lehrkraft noch` : ''}</p>${bonusText(t)}
+  const liste = s.fragen.map((f, i) => fehlerZeile(s, f, i, 'Deine Lehrkraft prüft diese Antwort.')).join('');
+  $('#ov-inhalt').innerHTML = `<div class="tafel" style="text-align:center;justify-items:center"><span class="eyebrow">Abgegeben · ${fmtD(heute)}</span><h2 class="num">${teileText(t)}</h2><p class="small">Gesamt ${zahl(p)} von ${zahl(max)}${pr.length ? ` · ${pr.length} Antwort${pr.length > 1 ? 'en prüft' : ' prüft'} deine Lehrkraft noch` : ''}</p>${bonusText(t)}
   <button class="knopf" data-akt="zuCode">Mein Code zeigen</button></div>
   ${liste ? `<div class="tafel"><h3>Das übst du diese Woche noch einmal</h3>${liste}</div>` : '<div class="hinweis">Alles richtig. Optime!</div>'}`;
 }
@@ -1541,29 +1682,66 @@ function schnitt(nr) {
 RENDER.liste = () => {
   const ds = Object.keys(T.results).sort().reverse().slice(0, 8);
   if (!kursListe().length) return '<div class="hinweis">Lege zuerst unter „Kurs“ die Kursliste an.</div>';
-  return `<div class="tafel"><span class="eyebrow">Gesamtliste</span><h2>Testnote und Lernzeit</h2>
-  <p class="small">Je Montag: Vokabeln (Vok) und Grammatik (Gr) getrennt, darunter Übungstage und Minuten (F = Übungstage im Ferienprogramm, +1 = Bonuspunkt). Die Schnitte rechnen je Teil in Prozent: die letzten vier Abfragen mit diesem Teil, die schwächste fällt weg. Bewertet wird nur die Testnote.</p></div>
+  const prOben = Object.values(T.results).some(r => Object.values(r).some(e => prOffen(e)));
+  return `${prOben ? pruefHTML() : ''}<div class="tafel"><span class="eyebrow">Gesamtliste</span><h2>Testnote und Lernzeit</h2>
+  <p class="small">Je Montag: Vokabeln (Vok) und Grammatik (Gr) getrennt, darunter Übungstage und Minuten (F = Übungstage im Ferienprogramm, P = geschriebene Probetests, +1 = Bonuspunkt). Die Schnitte rechnen je Teil in Prozent: die letzten vier Abfragen mit diesem Teil, die schwächste fällt weg. Bewertet wird nur die Testnote. * = noch nicht alle eingetippten Antworten geprüft. Notenschlüssel: 1 ab 90 % · 2 ab 80 % · 3 ab 70 % · 4 ab 60 % · 5 ab 30 % · 6 darunter.</p></div>
   <div class="tabwrap"><table><thead><tr><th>Name</th>${ds.map(d => `<th class="zahl">${fmtKurz(d)}</th>`).join('')}<th class="zahl">Schnitt Vok</th><th class="zahl">Schnitt Gr</th></tr></thead><tbody>
-  ${kursListe().map(r => { const sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); const sz = s => `<td class="zahl"><b>${s ? s.pz + ' %' : '–'}</b>${s && s.n < 4 ? '<span class="unter">vorläufig</span>' : ''}</td>`; return `<tr><td>${esc(r.name)}</td>${ds.map(d => { const e = T.results[d][r.nr]; return e ? `<td class="zahl">${hatTeile(e) ? esc(teileText(e, true)) : punkteText(e)}<span class="unter">${e.ft === undefined ? e.tage + ' T' : e.ft + ' F'} · ${e.min} Min</span></td>` : '<td class="zahl muted">–</td>'; }).join('')}${sz(sv)}${sz(sg)}</tr>`; }).join('')}
+  ${kursListe().map(r => { const sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); const sz = s => `<td class="zahl"><b>${s ? s.pz + ' %' : '–'}</b>${s && s.n < 4 ? '<span class="unter">vorläufig</span>' : ''}</td>`; return `<tr><td>${esc(r.name)}</td>${ds.map(d => { const e = T.results[d][r.nr]; return e ? `<td class="zahl">${hatTeile(e) ? `<b>Vok ${teilProzent(e, 'v')} %${prOffen(e) ? '*' : ''} · Gr ${teilProzent(e, 'g')} %</b><span class="unter">${zahl(teilPunkte(e, 'v').roh)}/${zahl(e.mv)} · ${zahl(teilPunkte(e, 'g').roh)}/${zahl(e.mg)}</span>` : punkteText(e) + ' · ' + gesamtProzent(e) + ' %'}<span class="unter">${e.ft === undefined ? e.tage + ' T' : e.ft + ' F'} · ${e.min} Min${e.pt ? ' · ' + e.pt + ' P' : ''}</span></td>` : '<td class="zahl muted">–</td>'; }).join('')}${sz(sv)}${sz(sg)}</tr>`; }).join('')}
   </tbody></table></div>
-  ${pruefHTML()}
+  ${prOben ? '' : pruefHTML()}
   ${Object.keys(T.kurz || {}).sort().reverse().map(kurzTabelleHTML).join('')}
   <div class="reihe"><button class="knopf" data-akt="exportCSV">Als Excel-Datei exportieren</button><button class="knopf leer klein" data-akt="sicherungT">Sicherung speichern</button><label class="knopf leer klein" for="t-laden" style="font-weight:600">Sicherung laden</label><input id="t-laden" type="file" accept="application/json,.json" hidden></div>`;
 };
-// Eingetippte Bedeutungen, die Cista nicht sicher erkannt hat: Die Lehrkraft entscheidet
+// Eingetippte Bedeutungen, die Cista nicht sicher erkannt hat: Die Lehrkraft entscheidet.
+// Antippen sammelt nur (PRUEF_ENTWURF); gespeichert wird erst mit „Entscheidungen übernehmen“.
+let PRUEF_ENTWURF = {};
+function pruefZaehler() {
+  const n = Object.keys(PRUEF_ENTWURF).length;
+  $$('.pruef-uebernehmen').forEach(b => { b.disabled = !n; b.textContent = n ? `Entscheidungen übernehmen (${n})` : 'Entscheidungen übernehmen'; });
+  $$('.pruef-verwerfen').forEach(b => { b.hidden = !n; });
+}
 function pruefHTML() {
   const zeilen = [];
   Object.keys(T.results).sort().reverse().forEach(d => kursListe().forEach(r => { const e = T.results[d][r.nr]; (e && e.pr || []).forEach((x, i) => zeilen.push({ d, r, x, i })); }));
   if (!zeilen.length) return '';
   const offen = zeilen.filter(z => z.x.st === undefined).length;
   return `<div class="tafel"><span class="eyebrow">Eingetippte Bedeutungen</span><h2>${offen ? offen + ' Antwort' + (offen > 1 ? 'en' : '') + ' zu prüfen' : 'Alles geprüft'}</h2>
-  <p class="small">Diese Antworten hat Cista nicht sicher erkannt. Sie zählen erst, wenn du „zählt“ antippst. Erneutes Scannen ändert deine Entscheidung nicht.</p>
-  <div class="tabwrap"><table><thead><tr><th>Datum</th><th>Name</th><th>Wort</th><th>Antwort</th><th>Lösung</th><th></th></tr></thead><tbody>
-  ${zeilen.map(({ d, r, x, i }) => { const v = V[+x.id.slice(1)] || {}; return `<tr class="${x.st === undefined ? 'pr-offen' : ''}"><td>${fmtKurz(d)}</td><td>${esc(r.name)}</td><td class="lat">${esc(v.lat || x.id)}</td><td><b>${esc(x.txt)}</b></td><td class="small">${esc(v.de || '')}</td>
-  <td style="white-space:nowrap"><button class="knopf klein ${x.st === 1 ? '' : 'leer'}" data-akt="pruefSetzen" data-d="${d}" data-nr="${r.nr}" data-i="${i}" data-st="1">zählt</button> <button class="knopf klein ${x.st === 0 ? '' : 'leer'}" data-akt="pruefSetzen" data-d="${d}" data-nr="${r.nr}" data-i="${i}" data-st="0">zählt nicht</button></td></tr>`; }).join('')}
-  </tbody></table></div></div>`;
+  <p class="small">Diese Antworten hat Cista nicht sicher erkannt. Tippe bei allen „zählt“ oder „zählt nicht“ an und tippe dann auf <b>„Entscheidungen übernehmen“</b> – erst dann wird gespeichert. Erneutes Scannen ändert deine Entscheidungen nicht.</p>
+  ${pruefKnoepfe()}
+  <div class="pruef-liste">${zeilen.map(({ d, r, x, i }) => { const v = V[+x.id.slice(1)] || {}; const key = d + '|' + r.nr + '|' + i; const z = key in PRUEF_ENTWURF ? PRUEF_ENTWURF[key] : x.st;
+    const knopf = (st, t) => `<button class="knopf klein ${z === st ? 'gewaehlt' : 'leer'}" data-akt="pruefSetzen" data-d="${d}" data-nr="${r.nr}" data-i="${i}" data-st="${st}">${t}</button>`;
+    return `<div class="pruef-karte ${z === 1 ? 'zaehlt' : z === 0 ? 'zaehltnicht' : 'offen'}${key in PRUEF_ENTWURF ? ' geaendert' : ''}">
+    <div class="pruef-text"><div class="small muted">${esc(r.name)} · ${fmtKurz(d)}</div><div><span class="lat">${esc(v.lat || x.id)}</span> → <b>${esc(x.txt)}</b></div><div class="small muted">Lösung: ${esc(v.de || '')}</div></div>
+    <div class="pruef-knoepfe">${knopf(1, '✓ zählt')}${knopf(0, '✗ zählt nicht')}</div></div>`; }).join('')}</div>
+  ${pruefKnoepfe()}</div>`;
 }
-RENDER_NACH.liste = () => { const f = $('#t-laden'); if (f) f.onchange = () => sicherungLaden(f.files[0], 't'); };
+// Prüfentscheidungen reisen mit dem Wochen-Code zu den Schülern (ab 3.11.2026).
+// Option 'p' + Datum + '_' + Einträge „Nr x Zustände“, je Antwort 1 = zählt, 0 = zählt nicht, o = noch offen.
+// Es werden nur Nummer und Zustände übertragen – keine Namen, keine Antworttexte.
+function korrekturOptionen(bisDatum) {
+  const ds = Object.keys(T.results).filter(d => d < bisDatum).sort().slice(-3);
+  return ds.map(d => {
+    const teile = Object.entries(T.results[d]).filter(([, e]) => e && e.pr && e.pr.length)
+      .map(([nr, e]) => nr + 'x' + e.pr.map(x => x.st === 1 ? '1' : x.st === 0 ? '0' : 'o').join(''));
+    return teile.length ? 'p' + datumKurz(d) + '_' + teile.join('-') : null;
+  }).filter(Boolean);
+}
+function korrekturInfo(opts) {
+  let schueler = 0, offen = 0; const ds = [];
+  opts.forEach(o => { const [d, rest] = o.slice(1).split('_'); ds.push(fmtD(datumLang(d))); rest.split('-').forEach(t => { schueler++; offen += ((t.split('x')[1] || '').match(/o/g) || []).length; }); });
+  return { ds, schueler, offen };
+}
+// beim Schüler: eigene Zeile heraussuchen und auf die gespeicherte Abfrage übertragen
+function korrekturAnwenden(o) {
+  const [d8, rest] = o.slice(1).split('_'); const d = datumLang(d8); const t = S.tests[d];
+  if (!t || !t.pr || !t.pr.length || !rest) return null;
+  const eintrag = rest.split('-').find(x => x.split('x')[0] === String(S.nr)); if (!eintrag) return null;
+  const z = eintrag.split('x')[1] || '';
+  t.pr.forEach((x, i) => { const c = z[i]; if (c === '1') x.st = 1; else if (c === '0') x.st = 0; else delete x.st; });
+  return d;
+}
+const pruefKnoepfe = () => `<div class="reihe"><button class="knopf pruef-uebernehmen" data-akt="pruefUebernehmen" disabled>Entscheidungen übernehmen</button><button class="knopf klein leer pruef-verwerfen" data-akt="pruefVerwerfen" hidden>Verwerfen</button></div>`;
+RENDER_NACH.liste = () => { const f = $('#t-laden'); if (f) f.onchange = () => sicherungLaden(f.files[0], 't'); pruefZaehler(); };
 // Kursbild für den Beamer: Übungszeit und häufigste Fehler; Punkte nur aufgeklappt
 // Auswahl im Kursbild: Montagsabfragen und Kurztests (Wert 'k:Datum')
 function bildAuswahlHTML(aktiv) {
@@ -1650,7 +1828,7 @@ function ergebnisVerarbeiten(txt) {
   if (t[0] === 'K') return kurzVerarbeiten(t);
   if (t[0] === 'P') return plenumVerarbeiten(t);
   if (t[0] !== 'R') return { ok: false, html: 'Das ist kein Ergebnis-Code' };
-  const [, nr, datum, tage, min, n, p, max, miss, ft, fb, pv, mv, pg, mg, prRoh] = t;
+  const [, nr, datum, tage, min, n, p, max, miss, ft, fb, pv, mv, pg, mg, prRoh, probe] = t;
   const r = T.roster.find(x => String(x.nr) === nr) || (nr === '0' ? { nr: 0, name: 'Testschüler' } : null);
   if (!r) return { ok: false, html: 'Nr. ' + esc(nr) + ' steht nicht in der Kursliste' };
   T.results[datum] = T.results[datum] || {};
@@ -1658,13 +1836,14 @@ function ergebnisVerarbeiten(txt) {
   const e = T.results[datum][r.nr] = { tage: +tage, min: +min, n: +n, p: +p, max: +max, miss: miss ? miss.split('.') : [] };
   if (ft !== undefined && ft !== '') { e.ft = +ft; e.fb = +fb ? 1 : 0; }
   if (mv !== undefined && mv !== '') { e.pv = +pv; e.mv = +mv; e.pg = +pg; e.mg = +mg; }
+  if (probe) e.pt = +probe;
   if (prRoh) {
     let liste = []; try { liste = JSON.parse(decodeURIComponent(prRoh)); } catch (x) { liste = []; }
     // schon getroffene Entscheidungen bleiben beim erneuten Scannen erhalten
     e.pr = liste.map(([id, txt]) => { const vorher = alt && alt.pr && alt.pr.find(y => y.id === id && y.txt === txt); return vorher && vorher.st !== undefined ? { id, txt, st: vorher.st } : { id, txt }; });
   }
   speichereT();
-  return { ok: true, html: `${esc(r.name)}<br><span class="num" style="font-size:1rem">${hatTeile(e) ? esc(teileText(e, true)) : punkteText(e) + ' Punkte'} · ${e.ft === undefined ? tage + ' Übungstage' : e.ft + ' Ferientage'} · ${min} Min${datum !== letzterMontag() ? ' · Abfrage vom ' + fmtD(datum) : ''}${prOffen(e) ? `<br><b>${prOffen(e)} Antwort${prOffen(e) > 1 ? 'en' : ''} zu prüfen</b> (unter „Liste“)` : ''}</span>` };
+  return { ok: true, html: `${esc(r.name)}<br><span class="num" style="font-size:1rem">${hatTeile(e) ? teileText(e, true) : punkteText(e) + ' Punkte'} · ${e.ft === undefined ? tage + ' Übungstage' : e.ft + ' Ferientage'} · ${min} Min${e.pt ? ' · ' + e.pt + ' Probetest' + (e.pt > 1 ? 's' : '') : ''}${datum !== letzterMontag() ? ' · Abfrage vom ' + fmtD(datum) : ''}${prOffen(e) ? `<br><b>${prOffen(e)} Antwort${prOffen(e) > 1 ? 'en' : ''} zu prüfen</b> (unter „Liste“)` : ''}</span>` };
 }
 
 // Kürzel aus vollem Namen: erste drei Buchstaben von Vor- und Nachname (Lena Müller -> LenMül)
@@ -1752,9 +1931,9 @@ function sicherungLaden(file, wer) {
 function csvExport() {
   const ds = Object.keys(T.results).sort();
   const ks = Object.keys(T.kurz || {}).sort();
-  const kopf = ['Nr', 'Name', ...ds.flatMap(d => [d + ' Vokabeln', d + ' Vokabeln Max', d + ' Grammatik', d + ' Grammatik Max', d + ' Gesamt (mit Bonus)', d + ' Gesamt Max', d + ' Übungstage', d + ' Minuten']), 'Schnitt Vokabeln % (letzte 4, ohne schwächste)', 'Schnitt Grammatik % (letzte 4, ohne schwächste)', 'Schnitt gesamt %', ...ks.flatMap(d => ['Kurztest ' + d + ' richtig', 'Kurztest ' + d + ' Max', 'Kurztest ' + d + ' Übungsminuten'])];
-  const tz = (e, k) => { const x = teilPunkte(e, k); return x ? [zahl(x.p), zahl(x.max)] : ['', '']; };
-  const zeilen = kursListe().map(r => { const s = schnitt(r.nr), sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); return [r.nr, r.name, ...ds.flatMap(d => { const e = T.results[d][r.nr]; return e ? [...tz(e, 'v'), ...tz(e, 'g'), zahl(punkte(e)), zahl(e.max), e.ft === undefined ? e.tage : e.ft + ' (Ferien)', e.min] : ['', '', '', '', '', '', '', '']; }), sv ? sv.pz : '', sg ? sg.pz : '', s ? s.pz : '', ...ks.flatMap(d => { const e = T.kurz[d].erg[r.nr]; return e ? [e.p, e.max, e.tage.reduce((x, y) => x + y, 0)] : ['', '', '']; })]; });
+  const kopf = ['Nr', 'Name', ...ds.flatMap(d => [d + ' Vokabeln', d + ' Vokabeln Max', d + ' Vokabeln %', d + ' Grammatik', d + ' Grammatik Max', d + ' Grammatik %', d + ' Gesamt (mit Bonus)', d + ' Gesamt Max', d + ' Übungstage', d + ' Minuten', d + ' Probetests']), 'Schnitt Vokabeln % (letzte 4, ohne schwächste)', 'Schnitt Grammatik % (letzte 4, ohne schwächste)', 'Schnitt gesamt %', ...ks.flatMap(d => ['Kurztest ' + d + ' richtig', 'Kurztest ' + d + ' Max', 'Kurztest ' + d + ' Übungsminuten'])];
+  const tz = (e, k) => { const x = teilPunkte(e, k); return x ? [zahl(x.p), zahl(x.max), Math.round(x.p / x.max * 100)] : ['', '', '']; };
+  const zeilen = kursListe().map(r => { const s = schnitt(r.nr), sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); return [r.nr, r.name, ...ds.flatMap(d => { const e = T.results[d][r.nr]; return e ? [...tz(e, 'v'), ...tz(e, 'g'), zahl(punkte(e)), zahl(e.max), e.ft === undefined ? e.tage : e.ft + ' (Ferien)', e.min, e.pt || 0] : ['', '', '', '', '', '', '', '', '', '', '']; }), sv ? sv.pz : '', sg ? sg.pz : '', s ? s.pz : '', ...ks.flatMap(d => { const e = T.kurz[d].erg[r.nr]; return e ? [e.p, e.max, e.tage.reduce((x, y) => x + y, 0)] : ['', '', '']; })]; });
   const csv = '﻿' + [kopf, ...zeilen].map(z => z.map(x => /[;"\n]/.test(String(x)) ? '"' + String(x).replace(/"/g, '""') + '"' : x).join(';')).join('\r\n');
   herunterladen('Cista_' + CFG.kurs + '_' + dkey() + '.csv', csv, 'text/csv;charset=utf-8');
 }
@@ -1779,15 +1958,16 @@ const AKT = {
   wocheScannen() {
     scannerOeffnen('Wochen-Code scannen', false, txt => {
       const t = codeLesen(txt); if (!t || t[0] !== 'W') return { ok: false, html: 'Das ist kein Wochen-Code' };
-      const [, wk, l, ids, th, opt] = t;
+      const [, wk, l, ids, th, opt] = t; const korrigiert = [];
       const deck = { week: wk, l: +l, ids: ids.split('.').map(Number).filter(i => V[i]), themen: th === undefined ? THEMEN_STANDARD : th.split('.').filter(x => THEMEN[x]), seit: dkey() };
       (opt || '').split('~').forEach(o => {
         if (o === 'k') deck.ka = true;
         if (o[0] === 'f') { const [von, bis, tage, ex] = o.slice(1).split('_'); deck.ferien = { von: datumLang(von), bis: datumLang(bis), tage: +tage }; deck.extra = extraAus(ex); }
+        if (o[0] === 'p') { const d = korrekturAnwenden(o); if (d) korrigiert.push(d); }
       });
       if (S.deck && S.deck.week !== deck.week) S.deckVorher = S.deck;
       S.deck = deck; speichereS();
-      return { ok: true, html: `${deck.ids.length} Vokabeln · ${deck.themen.length} Grammatikthemen<br><span style="font-size:1rem">${deck.ka ? 'Klassenarbeit am ' + fmtD(wk) : 'Abfrage am ' + fmtD(wk)}${deck.ferien ? '<br>Ferienprogramm bis ' + fmtD(deck.ferien.bis) : ''}${deck.extra && deck.extra.length ? '<br>Wiederholung: ' + esc(wdhName(deck)) : ''}</span>` };
+      return { ok: true, html: `${deck.ids.length} Vokabeln · ${deck.themen.length} Grammatikthemen<br><span style="font-size:1rem">${deck.ka ? 'Klassenarbeit am ' + fmtD(wk) : 'Abfrage am ' + fmtD(wk)}${deck.ferien ? '<br>Ferienprogramm bis ' + fmtD(deck.ferien.bis) : ''}${deck.extra && deck.extra.length ? '<br>Wiederholung: ' + esc(wdhName(deck)) : ''}${korrigiert.map(d => `<br><b>${prOffen(S.tests[d]) ? 'Aktualisiertes' : 'Endgültiges'} Ergebnis vom ${fmtD(d)}:</b> ${teileText(S.tests[d], true)}`).join('')}</span>` };
     });
   },
   spielMauer() { if (SITZ && SITZ.timer) clearInterval(SITZ.timer); mauerStarten(); },
@@ -1825,7 +2005,7 @@ const AKT = {
   plenumNaechster() { const s = plenumStand(); s.nr++; s.auf = false; store.set('plenum', s); zeige('plenum'); },
   plenumZurueck() { const s = plenumStand(); if (s.auf) s.auf = false; else if (s.nr > 0) { s.nr--; s.auf = true; } store.set('plenum', s); zeige('plenum'); },
   plenumNeu() { store.set('plenum', { id: PLENUM_STANDARD, nr: 0, auf: false }); zeige('plenum'); },
-  nochmal() { rundeStarten(SITZ.art); },
+  nochmal() { if (SITZ.art === 'tipp') tippStarten(); else rundeStarten(SITZ.art); },
   ovZu() { ovZu(); },
   antwort(b) {
     const i = +b.dataset.i;
@@ -1837,8 +2017,32 @@ const AKT = {
   gewusst(b) { protokoll(SITZ.id, b.dataset.ok === '1'); SITZ.n++; karteiKarte(); },
   abfrageStart() { abfrageStart(); },
   abfrageWeiter() { abfrageWeiter(); },
+  tippTraining() { tippStarten(); },
+  tippPruefen() { tippPruefen(); },
+  tippSelbst(b) { if (!SITZ || !SITZ.geprueft || SITZ.selbst === SITZ.nr) return; SITZ.selbst = SITZ.nr; tippErgebnis(b.dataset.ok === '1'); },
+  tippWeiter() { tippFrage(); },
+  probeStart() { if (SITZ && SITZ.timer) clearInterval(SITZ.timer); probeStart(); },
   genusWahl(b) { if (!SITZ) return; SITZ.genus = SITZ.genus || {}; SITZ.genus[b.dataset.i] = b.dataset.g; $$(`.genus[data-i="${b.dataset.i}"]`).forEach(x => x.classList.toggle('gewaehlt', x === b)); },
-  pruefSetzen(b) { const e = T.results[b.dataset.d] && T.results[b.dataset.d][b.dataset.nr]; if (!e || !e.pr || !e.pr[+b.dataset.i]) return; const x = e.pr[+b.dataset.i]; const st = +b.dataset.st; x.st = x.st === st ? undefined : st; speichereT(); zeige('liste'); },
+  // Entscheidungen erst sammeln (nichts springt, nichts wird gespeichert) …
+  pruefSetzen(b) {
+    const key = b.dataset.d + '|' + b.dataset.nr + '|' + b.dataset.i; const st = +b.dataset.st;
+    const e = T.results[b.dataset.d] && T.results[b.dataset.d][b.dataset.nr]; const x = e && e.pr && e.pr[+b.dataset.i]; if (!x) return;
+    const jetzt = key in PRUEF_ENTWURF ? PRUEF_ENTWURF[key] : x.st;
+    const neu = jetzt === st ? null : st;
+    if ((neu === null ? undefined : neu) === x.st) delete PRUEF_ENTWURF[key]; else PRUEF_ENTWURF[key] = neu;
+    const karte = b.closest('.pruef-karte'); const zeigt = key in PRUEF_ENTWURF ? PRUEF_ENTWURF[key] : x.st;
+    karte.classList.toggle('zaehlt', zeigt === 1); karte.classList.toggle('zaehltnicht', zeigt === 0); karte.classList.toggle('offen', zeigt === undefined || zeigt === null);
+    karte.classList.toggle('geaendert', key in PRUEF_ENTWURF);
+    karte.querySelectorAll('[data-akt="pruefSetzen"]').forEach(k => { const an = +k.dataset.st === zeigt; k.classList.toggle('gewaehlt', an); k.classList.toggle('leer', !an); });
+    pruefZaehler();
+  },
+  // … und mit einem Klick übernehmen
+  pruefUebernehmen() {
+    let n = 0;
+    Object.entries(PRUEF_ENTWURF).forEach(([key, st]) => { const [d, nr, i] = key.split('|'); const x = T.results[d] && T.results[d][nr] && T.results[d][nr].pr && T.results[d][nr].pr[+i]; if (!x) return; if (st === null) delete x.st; else x.st = st; n++; });
+    PRUEF_ENTWURF = {}; speichereT(); zeige('liste'); toast(n ? n + ' Entscheidung' + (n > 1 ? 'en' : '') + ' übernommen' : 'Nichts geändert');
+  },
+  pruefVerwerfen() { PRUEF_ENTWURF = {}; zeige('liste'); },
   zuCode() { SITZ = null; const ov = $('#ov'); ov.hidden = true; ov.innerHTML = ''; document.body.style.overflow = ''; zeige('code'); },
   codeKopieren(b) { kopieren(b.dataset.code); },
   sicherungS() { herunterladen('Cista_Sicherung_' + (S.name || '').replace(/\W+/g, '_') + '_' + dkey() + '.json', JSON.stringify({ typ: 'cista-schueler', stand: dkey(), daten: S }), 'application/json'); },
@@ -1868,8 +2072,10 @@ const AKT = {
     if (p && p.ka) opt.push('k');
     const fe = w.ferien && ferienMoeglich(p) ? p.ferien : null;
     if (fe) opt.push('f' + [datumKurz(heute < p.ab ? heute : p.ab), datumKurz(fe.bis), fe.tage, fe.extra].join('_'));
+    const korr = korrekturOptionen(wk); opt.push(...korr); const ki = korrekturInfo(korr);
     const c = wochenCode(wk, w.lek, alle, w.themen, opt);
-    $('#wochen-qr').innerHTML = `<div class="qr gross">${qrSvg(c)}<b>${alle.length} Vokabeln · ${p && p.ka ? 'Klassenarbeit' : 'Abfrage'} am ${fmtD(wk)}</b><span class="small">${w.themen.length ? w.themen.map(t => esc(THEMEN[t].name)).join(' · ') : 'ohne Grammatik'}</span>${fe ? `<span class="small">Ferienprogramm: Wiederholung ${esc(extraText(fe.extra))} · ${fe.tage} Tage à ${CFG.zielMin} Min → +1 Punkt</span>` : ''}<span class="small muted">${frueher.length ? 'Aus früheren Lektionen: ' + frueher.map(i => esc(V[i].lat)).join(', ') : ''}</span></div>`;
+    const korrHTML = ki.schueler ? `<span class="small">Enthält deine Prüfentscheidungen (${ki.ds.join(', ')}) für ${ki.schueler} Schüler – deren Ergebnis wird beim Scannen endgültig.</span>${ki.offen ? `<span class="small" style="color:var(--err)"><b>Noch ${ki.offen} Antwort${ki.offen > 1 ? 'en' : ''} nicht geprüft.</b> Prüfe zuerst unter „Liste“ und erzeuge den Code dann neu.</span>` : ''}` : '';
+    $('#wochen-qr').innerHTML = `<div class="qr gross">${qrSvg(c)}${korrHTML}<b>${alle.length} Vokabeln · ${p && p.ka ? 'Klassenarbeit' : 'Abfrage'} am ${fmtD(wk)}</b><span class="small">${w.themen.length ? w.themen.map(t => esc(THEMEN[t].name)).join(' · ') : 'ohne Grammatik'}</span>${fe ? `<span class="small">Ferienprogramm: Wiederholung ${esc(extraText(fe.extra))} · ${fe.tage} Tage à ${CFG.zielMin} Min → +1 Punkt</span>` : ''}<span class="small muted">${frueher.length ? 'Aus früheren Lektionen: ' + frueher.map(i => esc(V[i].lat)).join(', ') : ''}</span></div>`;
   },
   lehrerScannen() { scannerOeffnen('Codes einsammeln', true, ergebnisVerarbeiten); },
   testSchueler() {
