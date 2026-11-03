@@ -1912,12 +1912,18 @@ RENDER.liste = () => {
   return `${prOben ? pruefHTML() : ''}<div class="tafel"><span class="eyebrow">Gesamtliste</span><h2>Testnote und Lernzeit</h2>
   <p class="small">Je Montag: Vokabeln (Vok) und Grammatik (Gr) getrennt, darunter Übungstage und Minuten (F = Übungstage im Ferienprogramm, P = geschriebene Probetests, +1 = Bonuspunkt). Die Schnitte rechnen je Teil in Prozent: die letzten vier Abfragen mit diesem Teil, die schwächste fällt weg. Bewertet wird nur die Testnote. * = noch nicht alle eingetippten Antworten geprüft. Notenschlüssel: 1 ab 90 % · 2 ab 80 % · 3 ab 70 % · 4 ab 60 % · 5 ab 30 % · 6 darunter.</p></div>
   <div class="tabwrap"><table><thead><tr><th>Name</th>${ds.map(d => `<th class="zahl">${fmtKurz(d)}</th>`).join('')}<th class="zahl">Schnitt Vok</th><th class="zahl">Schnitt Gr</th></tr></thead><tbody>
-  ${kursListe().map(r => { const sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); const sz = s => `<td class="zahl"><b>${s ? s.pz + ' %' : '–'}</b>${s && s.n < 4 ? '<span class="unter">vorläufig</span>' : ''}</td>`; return `<tr><td>${esc(r.name)}</td>${ds.map(d => { const e = T.results[d][r.nr]; return e ? `<td class="zahl">${hatTeile(e) ? `<b>Vok ${teilProzent(e, 'v')} %${prOffen(e) ? '*' : ''} · Gr ${teilProzent(e, 'g')} %</b><span class="unter">${zahl(teilPunkte(e, 'v').roh)}/${zahl(e.mv)} · ${zahl(teilPunkte(e, 'g').roh)}/${zahl(e.mg)}</span>` : punkteText(e) + ' · ' + gesamtProzent(e) + ' %'}<span class="unter">${e.ft === undefined ? e.tage + ' T' : e.ft + ' F'} · ${e.min} Min${e.pt ? ' · ' + e.pt + ' P' : ''}</span></td>` : '<td class="zahl muted">–</td>'; }).join('')}${sz(sv)}${sz(sg)}</tr>`; }).join('')}
+  ${kursListe().map(r => { const sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); const sz = s => `<td class="zahl"><b>${s ? s.pz + ' %' : '–'}</b>${s && s.n < 4 ? '<span class="unter">vorläufig</span>' : ''}</td>`; return `<tr><td>${esc(r.name)}</td>${ds.map(d => { const e = T.results[d][r.nr]; return e ? `<td class="zahl">${hatTeile(e) ? listenZelle(e) : punkteText(e) + ' · ' + gesamtProzent(e) + ' %'}<span class="unter">${e.ft === undefined ? e.tage + ' T' : e.ft + ' F'} · ${e.min} Min${e.pt ? ' · ' + e.pt + ' P' : ''}</span></td>` : '<td class="zahl muted">–</td>'; }).join('')}${sz(sv)}${sz(sg)}</tr>`; }).join('')}
   </tbody></table></div>
   ${prOben ? '' : pruefHTML()}
   ${Object.keys(T.kurz || {}).sort().reverse().map(kurzTabelleHTML).join('')}
   <div class="reihe"><button class="knopf" data-akt="exportCSV">Als Excel-Datei exportieren</button><button class="knopf leer klein" data-akt="sicherungT">Sicherung speichern</button><label class="knopf leer klein" for="t-laden" style="font-weight:600">Sicherung laden</label><input id="t-laden" type="file" accept="application/json,.json" hidden></div>`;
 };
+// Zelle der Lehrerliste: nur die Teile zeigen, die in dieser Abfrage vorkamen (26.10. z. B. nur Grammatik)
+function listenZelle(e) {
+  const teile = [['v', 'Vok'], ['g', 'Gr']].map(([k, n]) => { const t = teilPunkte(e, k); return t ? { k, n, t } : null; }).filter(Boolean);
+  if (!teile.length) return punkteText(e);
+  return `<b>${teile.map(x => `${x.n} ${Math.round(x.t.p / x.t.max * 100)} %${x.k === 'v' && prOffen(e) ? '*' : ''}`).join(' · ')}</b><span class="unter">${teile.map(x => `${zahl(x.t.roh)}${x.t.bonus ? '+1' : ''}/${zahl(x.t.max)}`).join(' · ')}</span>`;
+}
 // Eingetippte Bedeutungen, die Cista nicht sicher erkannt hat: Die Lehrkraft entscheidet.
 // Antippen sammelt nur (PRUEF_ENTWURF); gespeichert wird erst mit „Entscheidungen übernehmen“.
 let PRUEF_ENTWURF = {};
