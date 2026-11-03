@@ -339,6 +339,34 @@ const RELS = [
   ['Cloelia et iī obsidēs, ___ dēlēgerat, ad parentēs reductī sunt.', ['quōs','quī','quās','quibus'], 'Cloelia und diejenigen Geiseln, die sie ausgewählt hatte, wurden zu ihren Eltern zurückgebracht.', 'Akk. Pl. m. – bezieht sich auf obsidēs, ist im Relativsatz Objekt.', 'Lektionstext Z. 22'],
   ['Puella, ___ facinus ā Rōmānīs et Etrūscīs laudābātur, ob virtūtem suam honōre affecta est.', ['cuius','quae','quam','quārum'], 'Das Mädchen, dessen Tat von den Römern und den Etruskern gelobt wurde, wurde wegen seiner Tapferkeit geehrt.', 'Gen. Sg. f. – bezieht sich auf puella, ist im Relativsatz Attribut.', 'Lektionstext Z. 22–24']
 ];
+// Übungssätze (Christoph, 3.11.2026): Die Sätze der Abfrage (RELS) kommen beim Üben nie vor.
+// Andere Geschichten (Troja, Aeneas, Romulus und Remus), nur Wortschatz bis L. 16; alle Kasus, Numeri und Genera.
+// [Satz mit Lücke, [richtig, Ablenker …], Übersetzung, Erklärung]
+const RELS_UEB = [
+  ['Rōmulus, ___ urbem condidit, rēx Rōmānōrum erat.', ['quī','quem','cuius','quae'], 'Romulus, der die Stadt gründete, war der König der Römer.', 'Nom. Sg. m. – bezieht sich auf Rōmulus, ist im Relativsatz Subjekt.'],
+  ['Lupa, ___ ad rīpam accēdit, puerōs alit.', ['quae','quam','quī','cuius'], 'Die Wölfin, die sich dem Ufer nähert, ernährt die Jungen.', 'Nom. Sg. f. – bezieht sich auf lupa, ist im Relativsatz Subjekt.'],
+  ['Templum, ___ in arce est, magnum est.', ['quod','quem','quī','cuius'], 'Der Tempel, der auf der Burg steht, ist groß.', 'Nom. Sg. n. – bezieht sich auf templum, ist im Relativsatz Subjekt.'],
+  ['Aenēās, ___ patria in flammīs erat, Trōiam relīquit.', ['cuius','quī','cui','quōrum'], 'Aeneas, dessen Heimat in Flammen stand, verließ Troja.', 'Gen. Sg. m. – bezieht sich auf Aenēās, ist im Relativsatz Attribut (wessen Heimat?).'],
+  ['Trōia, ___ mūrōs Graecī oppūgnābant, magna urbs erat.', ['cuius','quae','quam','quārum'], 'Troja, dessen Mauern die Griechen bestürmten, war eine große Stadt.', 'Gen. Sg. f. – bezieht sich auf Trōia, ist im Relativsatz Attribut (wessen Mauern?).'],
+  ['Pāstor, ___ līberī pārēbant, bonus vir erat.', ['cui','quem','quī','quibus'], 'Der Hirte, dem die Kinder gehorchten, war ein guter Mann.', 'Dat. Sg. m. – bezieht sich auf pāstor, ist im Relativsatz Dativobjekt (wem gehorchten sie?).'],
+  ['Māter, ___ fīlius dōnum dat, rīdet.', ['cui','quam','quae','quibus'], 'Die Mutter, der der Sohn ein Geschenk gibt, lacht.', 'Dat. Sg. f. – bezieht sich auf māter, ist im Relativsatz Dativobjekt (wem gibt er es?).'],
+  ['Trōiānī equum, ___ Graecī relīquerant, in urbem dūxērunt.', ['quem','quī','quod','quōs'], 'Die Trojaner führten das Pferd, das die Griechen zurückgelassen hatten, in die Stadt.', 'Akk. Sg. m. – bezieht sich auf equum (equus ist maskulin!), ist im Relativsatz Objekt.'],
+  ['Urbs, ___ Rōmulus condidit, Rōma appellāta est.', ['quam','quae','quem','quā'], 'Die Stadt, die Romulus gründete, wurde Rom genannt.', 'Akk. Sg. f. – bezieht sich auf urbs, ist im Relativsatz Objekt.'],
+  ['Dōnum, ___ Graecī Trōiānīs dedērunt, magnum perīculum erat.', ['quod','quem','quae','cuius'], 'Das Geschenk, das die Griechen den Trojanern gaben, war eine große Gefahr.', 'Akk. Sg. n. – bezieht sich auf dōnum, ist im Relativsatz Objekt.'],
+  ['Aenēās, ___ sociī ex urbe fūgērunt, novam patriam petit.', ['quōcum','quācum','quem','quibuscum'], 'Aeneas, mit dem die Gefährten aus der Stadt flohen, sucht eine neue Heimat.', 'Abl. Sg. m. + cum – bezieht sich auf Aenēās; das cum steht hinter dem Pronomen: quōcum = mit dem.'],
+  ['Nāvis, ___ Aenēās ā Trōiā abit, nova est.', ['quā','quam','quae','quō'], 'Das Schiff, mit dem Aeneas von Troja weggeht, ist neu.', 'Abl. Sg. f. – bezieht sich auf nāvis, ist im Relativsatz Mittel (womit?).'],
+  ['Cōnsilium, ___ Graecī Trōiam occupāvērunt, Ulixēs invēnit.', ['quō','quod','quem','quā'], 'Den Plan, durch den die Griechen Troja einnahmen, hatte Odysseus erdacht.', 'Abl. Sg. n. – bezieht sich auf cōnsilium, ist im Relativsatz Mittel (wodurch?).'],
+  ['Graecī, ___ in equō erant, portās urbis aperiunt.', ['quī','quōs','quae','quibus'], 'Die Griechen, die im Pferd waren, öffnen die Tore der Stadt.', 'Nom. Pl. m. – bezieht sich auf Graecī, ist im Relativsatz Subjekt.'],
+  ['Fēminae, ___ in templō sedent, deōs obsecrant.', ['quae','quās','quī','quam'], 'Die Frauen, die im Tempel sitzen, flehen die Götter an.', 'Nom. Pl. f. – bezieht sich auf fēminae, ist im Relativsatz Subjekt.'],
+  ['Arma, ___ in ruīnīs iacent, Trōiānōrum sunt.', ['quae','quī','quōs','quod'], 'Die Waffen, die in den Trümmern liegen, gehören den Trojanern.', 'Nom. Pl. n. – bezieht sich auf arma (Pluralwort, neutrum), ist im Relativsatz Subjekt.'],
+  ['Trōiānī, ___ urbs ārdēbat, ex patriā fugiunt.', ['quōrum','quī','quibus','cuius'], 'Die Trojaner, deren Stadt brannte, fliehen aus der Heimat.', 'Gen. Pl. m. – bezieht sich auf Trōiānī, ist im Relativsatz Attribut (wessen Stadt?).'],
+  ['Fēminae, ___ virī pūgnant, timent.', ['quārum','quōrum','quās','cuius'], 'Die Frauen, deren Männer kämpfen, haben Angst.', 'Gen. Pl. f. – bezieht sich auf fēminae, ist im Relativsatz Attribut (wessen Männer?).'],
+  ['Sociī, ___ Aenēās fātum nārrat, tacent.', ['quibus','quōs','quī','cui'], 'Die Gefährten, denen Aeneas den Schicksalsspruch erzählt, schweigen.', 'Dat. Pl. m. – bezieht sich auf sociī, ist im Relativsatz Dativobjekt (wem erzählt er?).'],
+  ['Puerōs, ___ lupa alit, pāstor in rīpā invenit.', ['quōs','quī','quās','quibus'], 'Die Jungen, die die Wölfin ernährt, findet der Hirte am Ufer.', 'Akk. Pl. m. – bezieht sich auf puerōs, ist im Relativsatz Objekt.'],
+  ['Graecī per portās, ___ Trōiānī nōn dēfendunt, in urbem intrant.', ['quās','quae','quōs','quam'], 'Die Griechen gehen durch die Tore, die die Trojaner nicht verteidigen, in die Stadt.', 'Akk. Pl. f. – bezieht sich auf portās, ist im Relativsatz Objekt.'],
+  ['Dōna, ___ Graecī relīquērunt, Trōiānī in arcem portant.', ['quae','quōs','quās','quod'], 'Die Geschenke, die die Griechen zurückließen, tragen die Trojaner auf die Burg.', 'Akk. Pl. n. – bezieht sich auf dōna, ist im Relativsatz Objekt.'],
+  ['Gladiī, ___ mīlitēs pūgnant, magnī sunt.', ['quibus','quī','quōs','quōrum'], 'Die Schwerter, mit denen die Soldaten kämpfen, sind groß.', 'Abl. Pl. m. – bezieht sich auf gladiī, ist im Relativsatz Mittel (womit?).']
+];
 
 // Mini-Sätze im Format „Drei Fassungen“: Satz, [richtig, falsch, falsch], Hinweis
 const FASS = [
@@ -569,20 +597,35 @@ function relForm(fi, art) {
 const THEMEN = {
   p16: { name: 'Perfekt und Plusquamperfekt Passiv', l: 16, ids: PPPV.map((_, i) => 'p' + i) },
   f16: { name: 'Relativpronomen – Formen', l: 16, ids: RPF.map((_, i) => 'f' + i) },
-  r16: { name: 'Relativpronomen im Satz', l: 16, ids: RELS.map((_, i) => 'r' + i) },
+  r16: { name: 'Relativpronomen im Satz', l: 16, ids: RELS_UEB.map((_, i) => 'u' + i) },   // Üben: nur Übungssätze
   m16: { name: 'Mini-Sätze übersetzen (Drei Fassungen)', l: 16, ids: FASS.map((_, i) => 'm' + i) },
   s16: { name: 'PVP-Stammformen', l: 16, ids: STAMM.map((_, i) => 's' + i) },
   p15: { name: 'Passiv im Präsens, Imperfekt, Futur', l: 15, ids: PRAES.map((_, i) => 'q' + i) }
 };
 const THEMEN_STANDARD = ['p16', 'r16', 'm16'];
-const themaVon = id => ({ v: 'vok', g: 'vok', p: 'p16', r: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16' })[id[0]];
-const gueltig = id => { const n = +id.slice(1); return Number.isInteger(n) && n >= 0 && !!({ v: V, p: PPPV, r: RELS, m: FASS, q: PRAES, s: STAMM, f: RPF }[id[0]] || [])[n]; };
+// Abfragesätze (aus AB 04, AB 05, Lektionstext) – nur in der echten Montagsabfrage (Christoph, 3.11.2026)
+const ABFRAGE_SAETZE = RELS.map((_, i) => 'r' + i);
+const themaVon = id => ({ v: 'vok', g: 'vok', p: 'p16', r: 'r16', u: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16' })[id[0]];
+const gueltig = id => { const n = +id.slice(1); return Number.isInteger(n) && n >= 0 && !!({ v: V, p: PPPV, r: RELS, u: RELS_UEB, m: FASS, q: PRAES, s: STAMM, f: RPF }[id[0]] || [])[n]; };
 function relFrage(ri) {
   const [satz, opts, de, why, quelle] = RELS[ri];
   return {
     id: 'r' + ri, art: 'Relativpronomen im Satz' + (quelle ? ' · ' + quelle : ''), lead: 'Welches Relativpronomen passt?', prompt: satz, lat: true, satz: true,
     opts: shuffle(opts.map((t, i) => ({ t, ok: i === 0 }))), optLat: true, erk: why + ' – ' + de
   };
+}
+function uebSatzFrage(ui) {
+  const [satz, opts, de, why] = RELS_UEB[ui];
+  return { id: 'u' + ui, art: 'Relativpronomen im Satz · Übung', lead: 'Welches Relativpronomen passt?', prompt: satz, lat: true, satz: true,
+    opts: shuffle(opts.map((t, i) => ({ t, ok: i === 0 }))), optLat: true, erk: why + ' – ' + de };
+}
+// Fehler-Training: statt eines Abfragesatzes einen Übungssatz mit derselben Lösung (sonst ähnlichem Kasus)
+function uebErsatz(id) {
+  if (id[0] !== 'r' || !RELS[+id.slice(1)]) return id;
+  const ziel = RELS[+id.slice(1)][1][0], kasus = RELS[+id.slice(1)][3].slice(0, 4);
+  let k = RELS_UEB.map((u, i) => u[1][0] === ziel ? i : -1).filter(i => i >= 0);
+  if (!k.length) k = RELS_UEB.map((u, i) => u[3].slice(0, 4) === kasus ? i : -1).filter(i => i >= 0);
+  return 'u' + (k.length ? k[(+id.slice(1)) % k.length] : 0);
 }
 function fassFrage(mi) {
   const [satz, opts, hin] = FASS[mi];
@@ -607,6 +650,7 @@ function frageAus(id, art) {
   if (id[0] === 'v') return vokFrage(n);
   if (id[0] === 'p') return passivForm(n, art);
   if (id[0] === 'r') return relFrage(n);
+  if (id[0] === 'u') return uebSatzFrage(n);
   if (id[0] === 'q') return praesForm(n, art);
   if (id[0] === 's') return stammFrage(n, art);
   if (id[0] === 'f') return relForm(n, art);
@@ -714,7 +758,8 @@ function idLabel(id) {
   if (id[0] === 'v') return V[n] ? V[n].lat + ' – ' + V[n].de : id;
   if (id[0] === 's') return 'PVP von ' + STAMM[n].inf + ' (' + STAMM[n].ppp + ')';
   if (id[0] === 'p') return 'Passivform von ' + PPPV[n][0] + '-';
-  if (id[0] === 'r') return 'Relativpronomen: ' + RELS[n][1][0];
+  if (id[0] === 'r') return 'Relativpronomen: ' + RELS[n][1][0] + ' (' + (RELS[n][4] || 'Abfrage') + ')';
+  if (id[0] === 'u') return 'Relativpronomen (Übung): ' + RELS_UEB[n][1][0];
   if (id[0] === 'f') return 'Relativpronomen ' + RPF[n].label + ' = ' + RPF[n].form;
   if (id[0] === 'm') return 'Mini-Satz ' + (n + 1);
   if (id[0] === 'q') return 'Passiv L. 15: ' + PRAES[n][1] + '-';
@@ -816,7 +861,7 @@ function vokZiehen(zuletzt) {
   const ex = (g ? g.ids : d.extra.flatMap(x => x.ids)).map(i => 'v' + i);
   return naechste(g || Math.random() < .5 ? ex : pf, zuletzt);
 }
-function fehlerIds() { const m = new Set(); Object.values(S.tests).forEach(t => (t.miss || []).forEach(id => { if (gueltig(id)) m.add(id); })); return [...m]; }
+function fehlerIds() { const m = new Set(); Object.values(S.tests).forEach(t => (t.miss || []).forEach(id => { if (gueltig(id)) m.add(uebErsatz(id)); })); return [...m]; }
 const zahl = x => String(Math.round(x * 2) / 2).replace('.', ',');
 // zu prüfende Bedeutungen: e.pr = [{ id, txt, st }] (st: undefined = offen, 1 = zählt, 0 = zählt nicht)
 const prPlus = e => (e && e.pr || []).filter(x => x.st === 1).length;
@@ -1605,10 +1650,10 @@ function abfragePlan(d) {
 }
 const abfrageAnzahl = d => { const p = abfragePlan(d); return p.nV + (p.nF || 0) + p.gram.reduce((a, [, n]) => a + n, 0); };
 const abfrageDauer = d => { const p = abfragePlan(d); const nG = p.gram.reduce((a, [, n]) => a + n, 0); return Math.max(1, Math.ceil((p.nV * 40 + (p.nF || 0) * 60 + nG * CFG.abfrageSekProFrage) / 60)) * 60; };
-const THEMA_ABFRAGE = { f16: 'Formen des Relativpronomens (bilden: eintippen · bestimmen: Kasus, Numerus, Genus antippen)', r16: 'Relativpronomen im Satz (Sätze aus AB 04, AB 05 und dem Lektionstext, zum Ankreuzen)' };
-function abfrageZusammenstellen(d) {
+const THEMA_ABFRAGE = { f16: 'Formen des Relativpronomens (bilden: eintippen · bestimmen: Kasus, Numerus, Genus antippen)', r16: 'Relativpronomen im Satz (zum Ankreuzen; in der Abfrage Sätze aus dem Unterricht, beim Üben andere Sätze)' };
+function abfrageZusammenstellen(d, probe) {
   const p = abfragePlan(d); const gram = [];
-  p.gram.forEach(([th, n]) => { const ids = shuffle(THEMEN[th].ids); for (let i = 0; i < n; i++) { const id = ids[i % ids.length], art = i % 2 ? 'be' : 'ue'; gram.push(id[0] === 'f' ? rpEingabeFrage(+id.slice(1), art) : frageAus(id, art)); } });
+  p.gram.forEach(([th, n]) => { const ids = shuffle(th === 'r16' && !probe ? ABFRAGE_SAETZE : THEMEN[th].ids); for (let i = 0; i < n; i++) { const id = ids[i % ids.length], art = i % 2 ? 'be' : 'ue'; gram.push(id[0] === 'f' ? rpEingabeFrage(+id.slice(1), art) : frageAus(id, art)); } });
   gram.forEach(f => { f.teil = 'g'; });
   // Formen zuerst wählen (möglichst ein Verb und ein Substantiv), Bedeutungen aus den übrigen Wörtern
   const kand = shuffle(deckIds(d).filter(i => formenFelder(V[i])));
@@ -1656,7 +1701,7 @@ function abfrageWeiter() {
 // Probetest (ab 3.11.2026): gleicher Aufbau und gleiche Zeit wie die Montagsabfrage, beliebig oft, zählt nicht für die Note.
 // Antworten zählen als Übungszeit; die Anzahl der Probetests geht mit dem Ergebnis-Code an die Lehrkraft.
 function probeStart() {
-  const fragen = abfrageZusammenstellen(S.deck);
+  const fragen = abfrageZusammenstellen(S.deck, true);
   SITZ = { abfrage: true, probe: true, fragen, nr: 0, antw: [], ende: Date.now() + fragenSek(fragen) * 1000, fertig: false };
   ovOeffnen('Probetest · zählt nicht'); abfrageFrage(); abfrageUhr();
 }
