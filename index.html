@@ -414,7 +414,8 @@ const CFG = {
   zielThema: 15,            // Antworten pro Grammatikthema und Woche
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
-  vorlageLektion: 16
+  vorlageLektion: 16,
+  fassung: '03.11.2026 · 13:15'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
 };
 
 /* ---------- Hilfsfunktionen ---------- */
@@ -971,9 +972,19 @@ function zeige(tab) {
   const m = $('#main');
   if (!ROLE) { m.innerHTML = willkommenHTML(); return; }
   if (ROLE === 'schueler' && !S) { m.innerHTML = einrichtenHTML(); return; }
-  const r = RENDER[tab]; m.innerHTML = '<section class="tab">' + (ROLE === 'schueler' && TESTMODUS ? testBandHTML() : '') + (ROLE === 'lehrer' && T.demo ? demoBandHTML() : '') + r() + '</section>';
+  const r = RENDER[tab]; let inhalt;
+  // Kann ein Tab nicht aufgebaut werden, erscheint eine Meldung statt eines stillen Stillstands
+  try { inhalt = r(); } catch (x) { inhalt = fehlerKarteHTML(x, tab); }
+  m.innerHTML = '<section class="tab">' + (ROLE === 'schueler' && TESTMODUS ? testBandHTML() : '') + (ROLE === 'lehrer' && T.demo ? demoBandHTML() : '') + inhalt + '</section>';
   window.scrollTo(0, 0);
-  if (RENDER_NACH[tab]) RENDER_NACH[tab]();
+  try { if (RENDER_NACH[tab]) RENDER_NACH[tab](); } catch (x) { m.insertAdjacentHTML('beforeend', fehlerKarteHTML(x, tab)); }
+}
+const sicher = (f, wo) => { try { return f(); } catch (x) { return fehlerKarteHTML(x, wo); } };
+function fehlerKarteHTML(x, wo) {
+  const zeile = String((x && x.stack) || '').split('\n').slice(0, 2).join(' · ');
+  return `<div class="tafel" style="border-color:var(--err)"><span class="eyebrow" style="color:var(--err)">Fehler beim Anzeigen</span>
+  <p>Dieser Bereich konnte nicht aufgebaut werden. Bitte ein Bildschirmfoto dieser Meldung an die Person schicken, die Cista betreut.</p>
+  <p class="small num" style="word-break:break-word">Bereich: ${esc(wo)} · Fassung ${esc(CFG.fassung)}<br>${esc((x && x.message) || String(x))}<br>${esc(zeile.slice(0, 300))}</p></div>`;
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('ein-feld')) {
@@ -1814,7 +1825,8 @@ RENDER.kurs = () => `
   <div class="reihe"><button class="knopf" data-akt="rosterSpeichern">Kursliste speichern</button>${T.roster.length ? '<button class="knopf leer" data-akt="alleStartcodes">Alle Start-Codes zeigen</button>' : ''}</div></div>
   ${T.roster.length ? `<div class="tabwrap"><table><thead><tr><th class="zahl">Nr.</th><th>Name</th><th></th></tr></thead><tbody>${T.roster.map(r => `<tr><td class="zahl">${r.nr}</td><td>${esc(r.name)}</td><td><button class="knopf klein leer" data-akt="startcode" data-nr="${r.nr}">Start-Code</button></td></tr>`).join('')}</tbody></table></div>` : ''}
   <div class="tafel dunkel"><h3>Ausprobieren</h3><p class="small">Schau dir die Schüleransicht auf diesem iPad an. Die Testdaten bleiben getrennt von deiner Liste.</p>
-  <div class="reihe"><button class="knopf gold" data-akt="testSchueler">Als Testschüler ausprobieren</button>${T.demo ? '' : '<button class="knopf klein leer" style="color:var(--gold-h);box-shadow:inset 0 0 0 2px var(--gold-h)" data-akt="demoLaden">Demo-Kurs mit Beispieldaten laden</button>'}</div></div>`;
+  <div class="reihe"><button class="knopf gold" data-akt="testSchueler">Als Testschüler ausprobieren</button>${T.demo ? '' : '<button class="knopf klein leer" style="color:var(--gold-h);box-shadow:inset 0 0 0 2px var(--gold-h)" data-akt="demoLaden">Demo-Kurs mit Beispieldaten laden</button>'}</div></div>
+  <p class="small muted" style="text-align:center">Cista · Fassung ${esc(CFG.fassung)}</p>`;
 // Welche Vorlage passt zu heute? (Montag bereitet schon den Dienstag vor)
 function planFuer(k = dkey()) {
   if (k > PLAN[PLAN.length - 1].bis) return null;
@@ -1908,14 +1920,14 @@ function schnitt(nr) {
 RENDER.liste = () => {
   const ds = Object.keys(T.results).sort().reverse().slice(0, 8);
   if (!kursListe().length) return '<div class="hinweis">Lege zuerst unter „Kurs“ die Kursliste an.</div>';
-  const prOben = Object.values(T.results).some(r => Object.values(r).some(e => prOffen(e)));
-  return `${prOben ? pruefHTML() : ''}<div class="tafel"><span class="eyebrow">Gesamtliste</span><h2>Testnote und Lernzeit</h2>
+  const prOben = Object.values(T.results).some(r => Object.values(r || {}).some(e => prOffen(e)));
+  return `${prOben ? sicher(pruefHTML, 'Prüfbereich') : ''}<div class="tafel"><span class="eyebrow">Gesamtliste</span><h2>Testnote und Lernzeit</h2>
   <p class="small">Je Montag: Vokabeln (Vok) und Grammatik (Gr) getrennt, darunter Übungstage und Minuten (F = Übungstage im Ferienprogramm, P = geschriebene Probetests, +1 = Bonuspunkt). Die Schnitte rechnen je Teil in Prozent: die letzten vier Abfragen mit diesem Teil, die schwächste fällt weg. Bewertet wird nur die Testnote. * = noch nicht alle eingetippten Antworten geprüft. Notenschlüssel: 1 ab 90 % · 2 ab 80 % · 3 ab 70 % · 4 ab 60 % · 5 ab 30 % · 6 darunter.</p></div>
   <div class="tabwrap"><table><thead><tr><th>Name</th>${ds.map(d => `<th class="zahl">${fmtKurz(d)}</th>`).join('')}<th class="zahl">Schnitt Vok</th><th class="zahl">Schnitt Gr</th></tr></thead><tbody>
-  ${kursListe().map(r => { const sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); const sz = s => `<td class="zahl"><b>${s ? s.pz + ' %' : '–'}</b>${s && s.n < 4 ? '<span class="unter">vorläufig</span>' : ''}</td>`; return `<tr><td>${esc(r.name)}</td>${ds.map(d => { const e = T.results[d][r.nr]; return e ? `<td class="zahl">${hatTeile(e) ? listenZelle(e) : punkteText(e) + ' · ' + gesamtProzent(e) + ' %'}<span class="unter">${e.ft === undefined ? e.tage + ' T' : e.ft + ' F'} · ${e.min} Min${e.pt ? ' · ' + e.pt + ' P' : ''}</span></td>` : '<td class="zahl muted">–</td>'; }).join('')}${sz(sv)}${sz(sg)}</tr>`; }).join('')}
+  ${kursListe().map(r => { try { const sv = teilSchnitt(r.nr, 'v'), sg = teilSchnitt(r.nr, 'g'); const sz = s => `<td class="zahl"><b>${s ? s.pz + ' %' : '–'}</b>${s && s.n < 4 ? '<span class="unter">vorläufig</span>' : ''}</td>`; return `<tr><td>${esc(r.name)}</td>${ds.map(d => { const e = T.results[d][r.nr]; return e ? `<td class="zahl">${hatTeile(e) ? listenZelle(e) : punkteText(e) + ' · ' + gesamtProzent(e) + ' %'}<span class="unter">${e.ft === undefined ? e.tage + ' T' : e.ft + ' F'} · ${e.min} Min${e.pt ? ' · ' + e.pt + ' P' : ''}</span></td>` : '<td class="zahl muted">–</td>'; }).join('')}${sz(sv)}${sz(sg)}</tr>`; } catch (x) { return `<tr><td>${esc(r.name)}</td><td colspan="${ds.length + 2}" class="small" style="color:var(--err);white-space:normal">Zeile nicht lesbar (${esc(x.message)}) · Fassung ${esc(CFG.fassung)}</td></tr>`; } }).join('')}
   </tbody></table></div>
-  ${prOben ? '' : pruefHTML()}
-  ${Object.keys(T.kurz || {}).sort().reverse().map(kurzTabelleHTML).join('')}
+  ${prOben ? '' : sicher(pruefHTML, 'Prüfbereich')}
+  ${Object.keys(T.kurz || {}).sort().reverse().map(d => sicher(() => kurzTabelleHTML(d), 'Kurztest ' + d)).join('')}
   <div class="reihe"><button class="knopf" data-akt="exportCSV">Als Excel-Datei exportieren</button><button class="knopf leer klein" data-akt="sicherungT">Sicherung speichern</button><label class="knopf leer klein" for="t-laden" style="font-weight:600">Sicherung laden</label><input id="t-laden" type="file" accept="application/json,.json" hidden></div>`;
 };
 // Zelle der Lehrerliste: nur die Teile zeigen, die in dieser Abfrage vorkamen (26.10. z. B. nur Grammatik)
