@@ -415,7 +415,7 @@ const CFG = {
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
   vorlageLektion: 16,
-  fassung: '03.11.2026 · 13:15'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
+  fassung: '09.11.2026 · 09:00'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
 };
 
 /* ---------- Hilfsfunktionen ---------- */
@@ -476,7 +476,8 @@ const PLAN = [
     ferien: { bis: '2026-10-25', tage: 7, extra: '14-15+1-4' } },
   { n: 2, ab: '2026-10-27', bis: '2026-11-02', titel: 'Woche 2', woerter: 'z0', wtext: 'Vokabeln Z. 1–8 + quī', themen: ['f16'], wdh: 0 },
   { n: 3, ab: '2026-11-03', bis: '2026-11-09', titel: 'Woche 3', woerter: 'neu', wtext: 'alle Wörter L. 16 laut Vokabelliste (ohne „nur PVP neu“)', themen: ['f16', 'r16'], wdh: 0 },
-  { n: 4, ab: '2026-11-10', bis: '2026-11-16', titel: 'Woche 4', woerter: 'alle', wtext: 'alle Wörter L. 16 + 5 aus früheren Lektionen', themen: ['p16', 'r16', 'm16', 's16'], wdh: 5 },
+  // Woche 4 (Christoph, 9.11.2026): alle 53 Wörter (auch die bekannten Verben mit neuem PVP), Relativpronomen + Perfekt/Plusquamperfekt Passiv, keine früheren Lektionen
+  { n: 4, ab: '2026-11-10', bis: '2026-11-16', titel: 'Woche 4', woerter: 'alle', wtext: 'alle Wörter L. 16 (auch die Stammformen der bekannten Verben)', themen: ['p16', 'f16', 'r16'], wdh: 0 },
   { n: 5, ab: '2026-11-17', bis: '2026-11-23', titel: 'Woche 5 · Wiederholung', woerter: 'alle', wtext: 'alle Wörter L. 16 + 10 aus früheren Lektionen', themen: ['p16', 'r16', 'm16', 's16', 'p15'], wdh: 10 },
   { n: 6, ab: '2026-11-24', bis: '2026-11-30', titel: 'Woche 6 · Klassenarbeit', woerter: 'alle', wtext: 'alle Wörter L. 16', themen: ['p16', 'r16', 'm16', 's16'], wdh: 0, ka: true }
 ];
@@ -967,8 +968,9 @@ function leisteZeigen() {
   nav.hidden = false;
   $('#leiste-in').innerHTML = TABS[ROLE].map(([k, n]) => `<button data-tab="${k}" ${TAB === k ? 'aria-current="page"' : ''}>${ICON[k]}<span>${n}</span></button>`).join('');
 }
+let ZEIGE_TAG = null;
 function zeige(tab) {
-  TAB = tab; leisteZeigen(); kopfAktualisieren();
+  TAB = tab; ZEIGE_TAG = dkey(); leisteZeigen(); kopfAktualisieren();
   const m = $('#main');
   if (!ROLE) { m.innerHTML = willkommenHTML(); return; }
   if (ROLE === 'schueler' && !S) { m.innerHTML = einrichtenHTML(); return; }
@@ -979,6 +981,10 @@ function zeige(tab) {
   window.scrollTo(0, 0);
   try { if (RENDER_NACH[tab]) RENDER_NACH[tab](); } catch (x) { m.insertAdjacentHTML('beforeend', fehlerKarteHTML(x, tab)); }
 }
+// Bleibt Cista über Nacht offen, baut sich die Seite beim Zurückkehren mit dem neuen Datum auf (z. B. Abfrage-Code)
+function neuerTagPruefen() { if (document.visibilityState !== 'hidden' && TAB && ZEIGE_TAG && ZEIGE_TAG !== dkey() && !SITZ) zeige(TAB); }
+document.addEventListener('visibilitychange', neuerTagPruefen); window.addEventListener('focus', neuerTagPruefen); window.addEventListener('pageshow', neuerTagPruefen);
+setInterval(neuerTagPruefen, 60000);
 const sicher = (f, wo) => { try { return f(); } catch (x) { return fehlerKarteHTML(x, wo); } };
 function fehlerKarteHTML(x, wo) {
   const zeile = String((x && x.stack) || '').split('\n').slice(0, 2).join(' · ');
@@ -1836,11 +1842,14 @@ function wahlAusPlan(n) {
   const p = PLAN.find(x => x.n === n), f = planFuer();
   const fuer = f ? f.n : 'eigen';
   if (!p) return { fuer, plan: 'eigen', lek: CFG.vorlageLektion, ids: vorlageDeck(), themen: THEMEN_STANDARD.slice(), wdh: 5, ferien: false };
-  return { fuer, plan: p.n, lek: 16, ids: wortSatz(p.woerter), themen: p.themen.slice(), wdh: p.wdh, ferien: !!p.ferien };
+  return { fuer, plan: p.n, lek: 16, ids: wortSatz(p.woerter), themen: p.themen.slice(), wdh: p.wdh, ferien: !!p.ferien, sig: planSig(p) };
 }
+// Kennung einer Vorlage: Ändert sich die Vorlage (neue Cista-Fassung), wird eine gespeicherte Auswahl dazu verworfen
+const planSig = p => p ? [p.n, p.woerter, p.themen.join('.'), p.wdh].join('|') : '';
 function wahlLaden() {
   const f = planFuer(); const w = store.get('wahl', null);
-  return w && w.fuer === (f ? f.n : 'eigen') ? w : wahlAusPlan(f ? f.n : 'eigen');
+  const passt = w && w.fuer === (f ? f.n : 'eigen') && (w.plan === 'eigen' || w.sig === planSig(PLAN.find(x => x.n === w.plan)));
+  return passt ? w : wahlAusPlan(f ? f.n : 'eigen');
 }
 // Montag, an dem die Karten abgefragt werden (bei Verspätung der nächste Montag)
 function abfrageTag(w) {
