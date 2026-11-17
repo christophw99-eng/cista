@@ -415,7 +415,7 @@ const CFG = {
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
   vorlageLektion: 16,
-  fassung: '17.11.2026 · 11:15'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
+  fassung: '17.11.2026 · 12:50'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
 };
 
 /* ---------- Hilfsfunktionen ---------- */
@@ -839,7 +839,7 @@ function protokoll(id, ok) {
   d.s += plus; d.n++; if (ok) d.k++;
   const th = id[0] === 'v' && !deckIds().includes(+id.slice(1)) ? 'wdh' : themaVon(id); d.t = d.t || {}; d.t[th] = (d.t[th] || 0) + 1;
   const b = S.box[id] || 1; S.box[id] = ok ? Math.min(5, b + 1) : 1;
-  speichereS();
+  speichereS(); serieBadge();
 }
 function wochenSumme(stu, wk) {
   const tage = []; let sek = 0, n = 0;
@@ -1182,8 +1182,27 @@ function serieStand() {
   if (best > (sd.rekord || 0)) { sd.rekord = best; speichereS(); }
   return { n, rekord: Math.max(best, sd.rekord || 0), heuteOk: tagMin(heute) >= CFG.zielMin };
 }
+// Zahl am App-Symbol (Badging API, iPadOS ab 16.4): nur als Home-Bildschirm-App und nur mit erlaubten Mitteilungen.
+// Ohne Server wird die Zahl nur aktualisiert, solange Cista offen ist (beim Üben, beim Öffnen, beim Verlassen).
+const badgeMoeglich = () => typeof navigator !== 'undefined' && 'setAppBadge' in navigator && typeof Notification !== 'undefined';
+const alsApp = () => !!(navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches));
+function serieBadge() {
+  try {
+    if (!badgeMoeglich() || Notification.permission !== 'granted' || ROLE !== 'schueler' || !S || dkey() < SERIE_START) return;
+    const n = serieStand().n; (n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+  } catch (x) { /* Zahl am Symbol ist nur ein Zusatz */ }
+}
+function serieBadgeHTML() {
+  if (!badgeMoeglich()) return '';
+  if (Notification.permission === 'granted') return '<p class="small muted">🔔 Deine Serie steht als Zahl an deinem Cista-Symbol.</p>';
+  if (Notification.permission === 'denied') return '<p class="small muted">🔔 Mitteilungen sind für Cista ausgeschaltet. Wenn deine Serie am App-Symbol stehen soll: Einstellungen → Mitteilungen → Cista → erlauben.</p>';
+  if (!alsApp()) return '<p class="small muted">🔔 Tipp: Leg Cista auf den Home-Bildschirm (Teilen → „Zum Home-Bildschirm“) und öffne es dort – dann kann deine Serie als Zahl am Symbol stehen.</p>';
+  return '<div><button class="knopf klein leer" data-akt="serieBadgeErlauben">🔔 Serie am App-Symbol zeigen</button></div>';
+}
+document.addEventListener('visibilitychange', () => serieBadge());
 function serieKarteHTML() {
   if (dkey() < SERIE_START) return '';
+  setTimeout(serieBadge, 0);
   const st = serieStand(), sd = serieDaten(), heute = dkey(), morgen = addDays(heute, 1), hMin = tagMin(heute);
   const rang = serieRang(st.n), nae = serieNaechster(st.n);
   const tage = Array.from({ length: 7 }, (_, i) => addDays(wochenMontag(heute), i)).map(k => {
@@ -1208,7 +1227,7 @@ function serieKarteHTML() {
     <h2><span aria-hidden="true">🔥</span> ${titel}</h2></div>
     <div class="pips" style="gap:6px" aria-label="Diese Woche">${tage}</div></div>
   <div class="small">${st.heuteOk ? `<b>Heute geschafft</b> – deine Serie wächst.` : `Heute: <b class="num">${hMin} von ${CFG.zielMin} Minuten</b> · noch ${CFG.zielMin - hMin} Min. für heute`}${nae ? ` · noch ${nae[0] - st.n} ${nae[0] - st.n === 1 ? 'Tag' : 'Tage'} bis <i>${nae[1]}</i>` : ''}</div>
-  <div class="reihe" style="align-items:center;gap:8px;flex-wrap:wrap">${joker}</div>
+  <div class="reihe" style="align-items:center;gap:8px;flex-wrap:wrap">${joker}</div>${serieBadgeHTML()}
   <p class="small muted">Jeder Tag mit ${CFG.zielMin} Minuten zählt, auch am Wochenende. Einmal pro Woche (Mo–So) darfst du einen Joker setzen: Dann reißt die Serie an dem Tag nicht, wächst aber auch nicht.${st.rekord ? ` Rekord: <b>${st.rekord} ${st.rekord === 1 ? 'Tag' : 'Tage'}</b>${serieRang(st.rekord) ? ' · <i>' + serieRang(st.rekord) + '</i>' : ''}.` : ''}<br>Ränge: ${SERIE_RAENGE.map(([t, r]) => `${t} <i>${r}</i>`).join(' · ')}</p></div>`;
 }
 const RENDER = {}, RENDER_NACH = {};
@@ -2271,6 +2290,7 @@ function csvExport() {
 
 /* ===================== Aktionen ===================== */
 const AKT = {
+  serieBadgeErlauben() { try { Notification.requestPermission().then(() => { serieBadge(); zeige(TAB); }).catch(() => {}); } catch (x) { } },
   serieJoker(a) { const k = a.dataset.tag, h = dkey(); if ((k === h || k === addDays(h, 1)) && !jokerInWoche(k)) { serieDaten().joker[k] = true; speichereS(); } zeige(TAB); },
   serieJokerWeg(a) { const k = a.dataset.tag; if (k >= dkey()) { delete serieDaten().joker[k]; speichereS(); } zeige(TAB); },
   rolleSchueler() { ROLE = 'schueler'; store.set('role', ROLE); TESTMODUS = false; store.set('testmodus', false); ladeS(); zeige('ueben'); },
