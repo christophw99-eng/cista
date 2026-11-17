@@ -415,7 +415,7 @@ const CFG = {
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
   vorlageLektion: 16,
-  fassung: '09.11.2026 · 09:00'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
+  fassung: '17.11.2026 · 10:30'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
 };
 
 /* ---------- Hilfsfunktionen ---------- */
@@ -478,7 +478,8 @@ const PLAN = [
   { n: 3, ab: '2026-11-03', bis: '2026-11-09', titel: 'Woche 3', woerter: 'neu', wtext: 'alle Wörter L. 16 laut Vokabelliste (ohne „nur PVP neu“)', themen: ['f16', 'r16'], wdh: 0 },
   // Woche 4 (Christoph, 9.11.2026): alle 53 Wörter (auch die bekannten Verben mit neuem PVP), Relativpronomen + Perfekt/Plusquamperfekt Passiv, keine früheren Lektionen
   { n: 4, ab: '2026-11-10', bis: '2026-11-16', titel: 'Woche 4', woerter: 'alle', wtext: 'alle Wörter L. 16 (auch die Stammformen der bekannten Verben)', themen: ['p16', 'f16', 'r16'], wdh: 0 },
-  { n: 5, ab: '2026-11-17', bis: '2026-11-23', titel: 'Woche 5 · Wiederholung', woerter: 'alle', wtext: 'alle Wörter L. 16 + 10 aus früheren Lektionen', themen: ['p16', 'r16', 'm16', 's16', 'p15'], wdh: 10 },
+  // Woche 5 (Christoph, 17.11.2026): Wiederholung vor der KA – alle 53 Wörter, keine früheren Lektionen, keine Mini-Sätze/PVP-Stammformen; Formen zuerst (3 × f16, 2 × p16, 2 × r16)
+  { n: 5, ab: '2026-11-17', bis: '2026-11-23', titel: 'Woche 5 · Wiederholung', woerter: 'alle', wtext: 'alle Wörter L. 16 (Wiederholung, keine neuen)', themen: ['f16', 'p16', 'r16'], wdh: 0 },
   { n: 6, ab: '2026-11-24', bis: '2026-11-30', titel: 'Woche 6 · Klassenarbeit', woerter: 'alle', wtext: 'alle Wörter L. 16', themen: ['p16', 'r16', 'm16', 's16'], wdh: 0, ka: true }
 ];
 // Zusatz-Wiederholung, z. B. '15+1-4' -> [{label:'L. 15', ids}, {label:'L. 1–4', ids}]
@@ -609,18 +610,43 @@ const THEMEN_STANDARD = ['p16', 'r16', 'm16'];
 const ABFRAGE_SAETZE = RELS.map((_, i) => 'r' + i);
 const themaVon = id => ({ v: 'vok', g: 'vok', p: 'p16', r: 'r16', u: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16' })[id[0]];
 const gueltig = id => { const n = +id.slice(1); return Number.isInteger(n) && n >= 0 && !!({ v: V, p: PPPV, r: RELS, u: RELS_UEB, m: FASS, q: PRAES, s: STAMM, f: RPF }[id[0]] || [])[n]; };
-function relFrage(ri) {
-  const [satz, opts, de, why, quelle] = RELS[ri];
-  return {
-    id: 'r' + ri, art: 'Relativpronomen im Satz' + (quelle ? ' · ' + quelle : ''), lead: 'Welches Relativpronomen passt?', prompt: satz, lat: true, satz: true,
-    opts: shuffle(opts.map((t, i) => ({ t, ok: i === 0 }))), optLat: true, erk: why + ' – ' + de
-  };
+// Relativpronomen im Satz (Umbau 17.11.2026, Wunsch der Schüler: Einsetzen war zu schwer).
+// Statt einzusetzen, erkennen die Schüler das Relativpronomen im fertigen Satz – in zwei Aufgabenarten:
+//   'ue' = Bezugswort finden (daraus Genus und Numerus) · 'be' = Relativpronomen in diesem Satz bestimmen (Kasus aus dem Relativsatz)
+// Wörter zum Antippen je Satz: erstes = Bezugswort, dann Ablenker aus demselben Satz (keine Wörter, die dieselbe Person/Sache meinen)
+const REL_BEZUG = {
+  r: [['rēx','custōdēs','īrātus'], ['puella','rēx','Cloelia'], ['obsidēs','Cloelia','lībertātem'], ['foedus','Rōmānī','ruptum'],
+      ['Porsenna','īra','Rōmānōs'], ['rēx','Rōmānī'], ['puella','custōdēs'], ['nūntiī','rēx','Rōmānōs'], ['statua','Rōmānī','urbe'],
+      ['parentēs','fīliae'], ['rēgem','custōdēs','īrātus'], ['foedus','rēgī','rēx'], ['obsidēs','castrīs'], ['puellās','rēx','parentēs'],
+      ['obsidēs','lībertātem'], ['obsidēs','Cloelia','parentēs'], ['puella','facinus','Rōmānīs','virtūtem']],
+  u: [['Rōmulus','urbem','Rōmānōrum'], ['lupa','rīpam','puerōs'], ['templum','arce'], ['Aenēās','patria','flammīs','Trōiam'],
+      ['Trōia','mūrōs','Graecī'], ['pāstor','līberī'], ['māter','fīlius','dōnum'], ['equum','Trōiānī','Graecī','urbem'], ['urbs','Rōmulus'],
+      ['dōnum','Graecī','Trōiānīs'], ['Aenēās','sociī','urbe','patriam'], ['nāvis','Aenēās','Trōiā'], ['cōnsilium','Graecī','Trōiam','Ulixēs'],
+      ['Graecī','equō','portās','urbis'], ['fēminae','templō','deōs'], ['arma','ruīnīs','Trōiānōrum'], ['Trōiānī','urbs','patriā'],
+      ['fēminae','virī'], ['sociī','Aenēās','fātum'], ['puerōs','lupa','pāstor','rīpā'], ['portās','Graecī','Trōiānī','urbem'],
+      ['dōna','Graecī','Trōiānī','arcem'], ['gladiī','mīlitēs']]
+};
+const relBestimmung = why => (why.match(/^(Nom|Gen|Dat|Akk|Abl)\. (Sg|Pl)\. [mfn]\./) || [''])[0];
+function relSatzFrage(typ, n, art) {
+  const [satz, opts, de, why, quelle] = (typ === 'r' ? RELS : RELS_UEB)[n];
+  const rp = opts[0], form = rp.replace(/cum$/, ''), richtig = relBestimmung(why);
+  const prompt = satz.replace('___', '«' + rp + '»');
+  const kopf = typ === 'r' ? 'Relativpronomen im Satz' + (quelle ? ' · ' + quelle : '') : 'Relativpronomen im Satz · Übung';
+  const erk = why + ' – ' + de;
+  if ((art || pick(['ue', 'be'])) === 'ue') {
+    return { id: typ + n, art: kopf, lead: `Auf welches Wort bezieht sich «${rp}»?`, prompt, lat: true, satz: true,
+      opts: shuffle(REL_BEZUG[typ][n].map((t, i) => ({ t: satz.toLowerCase().startsWith(t.toLowerCase()) ? satz.slice(0, t.length) : t, ok: i === 0 }))), optLat: true, erk };   // Schreibweise wie im Satz
+  }
+  // Bestimmen: zuerst die anderen Möglichkeiten derselben Form (die schließt erst der Satz aus), dann ähnliche Bestimmungen
+  const z = RPF.find(x => x.label === richtig) || RPF[0];
+  const aehnlich = x => (x.k === z.k ? 2 : 0) + (x.nu === z.nu ? 1 : 0) + (x.g === z.g ? 1 : 0);
+  const labels = rpAlle(form).filter(l => l !== richtig);
+  shuffle(RPF.filter(x => x.label !== richtig)).sort((a, b) => aehnlich(b) - aehnlich(a)).forEach(x => { if (labels.length < 3 && !labels.includes(x.label)) labels.push(x.label); });
+  return { id: typ + n, art: kopf, lead: `Bestimme «${rp}» in diesem Satz:`, prompt, lat: true, satz: true, gram: 'Tipp: Genus und Numerus vom Bezugswort, Kasus aus dem Relativsatz',
+    opts: shuffle([{ t: richtig, ok: true }, ...labels.slice(0, 3).map(t => ({ t }))]), erk };
 }
-function uebSatzFrage(ui) {
-  const [satz, opts, de, why] = RELS_UEB[ui];
-  return { id: 'u' + ui, art: 'Relativpronomen im Satz · Übung', lead: 'Welches Relativpronomen passt?', prompt: satz, lat: true, satz: true,
-    opts: shuffle(opts.map((t, i) => ({ t, ok: i === 0 }))), optLat: true, erk: why + ' – ' + de };
-}
+const relFrage = (ri, art) => relSatzFrage('r', ri, art);
+const uebSatzFrage = (ui, art) => relSatzFrage('u', ui, art);
 // Fehler-Training: statt eines Abfragesatzes einen Übungssatz mit derselben Lösung (sonst ähnlichem Kasus)
 function uebErsatz(id) {
   if (id[0] !== 'r' || !RELS[+id.slice(1)]) return id;
@@ -651,8 +677,8 @@ function frageAus(id, art) {
   const n = +id.slice(1);
   if (id[0] === 'v') return vokFrage(n);
   if (id[0] === 'p') return passivForm(n, art);
-  if (id[0] === 'r') return relFrage(n);
-  if (id[0] === 'u') return uebSatzFrage(n);
+  if (id[0] === 'r') return relFrage(n, art);
+  if (id[0] === 'u') return uebSatzFrage(n, art);
   if (id[0] === 'q') return praesForm(n, art);
   if (id[0] === 's') return stammFrage(n, art);
   if (id[0] === 'f') return relForm(n, art);
@@ -1238,7 +1264,7 @@ function ovZu() {
   SITZ = null; const ov = $('#ov'); ov.hidden = true; ov.innerHTML = ''; document.body.style.overflow = ''; zeige(TAB);
 }
 function frageHTML(f, extra = '') {
-  return `<div class="frage"><span class="lead">${esc(f.lead)}</span><div class="prompt ${f.satz ? 'satz' : ''}">${f.satz ? esc(f.prompt).replace('___', '<span class="luecke">&nbsp;</span>') : esc(f.prompt)}</div>${f.gram ? `<div class="gram">${esc(f.gram)}</div>` : ''}</div>
+  return `<div class="frage"><span class="lead">${esc(f.lead)}</span><div class="prompt ${f.satz ? 'satz' : ''}">${f.satz ? esc(f.prompt).replace('___', '<span class="luecke">&nbsp;</span>').replace(/«([^»]+)»/, '<b style="text-decoration:underline;text-underline-offset:3px">$1</b>') : esc(f.prompt)}</div>${f.gram ? `<div class="gram">${esc(f.gram)}</div>` : ''}</div>
   <div class="optionen ${f.lang || f.opts.some(o => o.t.length > 38) ? 'lang' : ''}">${f.opts.map((o, i) => `<button class="opt ${f.optLat ? 'lat' : ''}" data-akt="antwort" data-i="${i}">${esc(o.t)}</button>`).join('')}</div>${extra}`;
 }
 function rueckHTML(f, ok) {
@@ -1667,7 +1693,7 @@ function abfragePlan(d) {
 }
 const abfrageAnzahl = d => { const p = abfragePlan(d); return p.nV + (p.nF || 0) + p.gram.reduce((a, [, n]) => a + n, 0); };
 const abfrageDauer = d => { const p = abfragePlan(d); const nG = p.gram.reduce((a, [, n]) => a + n, 0); return Math.max(1, Math.ceil((p.nV * 40 + (p.nF || 0) * 60 + nG * CFG.abfrageSekProFrage) / 60)) * 60; };
-const THEMA_ABFRAGE = { f16: 'Formen des Relativpronomens (bilden: eintippen · bestimmen: Kasus, Numerus, Genus antippen)', r16: 'Relativpronomen im Satz (zum Ankreuzen; in der Abfrage Sätze aus dem Unterricht, beim Üben andere Sätze)' };
+const THEMA_ABFRAGE = { f16: 'Formen des Relativpronomens (bilden: eintippen · bestimmen: Kasus, Numerus, Genus antippen)', r16: 'Relativpronomen im Satz (Bezugswort finden bzw. das Relativpronomen im Satz bestimmen – zum Antippen; in der Abfrage Sätze aus dem Unterricht, beim Üben andere Sätze)' };
 function abfrageZusammenstellen(d, probe) {
   const p = abfragePlan(d); const gram = [];
   p.gram.forEach(([th, n]) => { const ids = shuffle(th === 'r16' && !probe ? ABFRAGE_SAETZE : THEMEN[th].ids); for (let i = 0; i < n; i++) { const id = ids[i % ids.length], art = i % 2 ? 'be' : 'ue'; gram.push(id[0] === 'f' ? rpEingabeFrage(+id.slice(1), art) : frageAus(id, art)); } });
