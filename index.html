@@ -415,7 +415,7 @@ const CFG = {
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
   vorlageLektion: 16,
-  fassung: '17.11.2026 · 10:30'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
+  fassung: '17.11.2026 · 11:15'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
 };
 
 /* ---------- Hilfsfunktionen ---------- */
@@ -1159,6 +1159,58 @@ function wochenKarteHTML() {
   <div class="balken" role="progressbar" aria-valuenow="${hMin}" aria-valuemax="${CFG.zielMin}"><i style="width:${Math.min(100, hMin / CFG.zielMin * 100)}%"></i></div>
   <p class="small muted">Ein Übungstag zählt ab ${CFG.zielMin} Minuten. Gezählt wird nur, wenn du wirklich Aufgaben beantwortest.</p></div>`;
 }
+/* ---------- Serie (Streak), Wunsch der Schüler (Christoph, 17.11.2026) ----------
+   Ein Tag zählt ab CFG.zielMin Minuten echter Übungszeit – jeden Tag, auch am Wochenende. Start für alle am 17.11.2026 bei null.
+   1 Joker pro Woche (Mo–So), selbst gesetzt für heute oder morgen: Die Serie reißt an dem Tag nicht, wächst aber auch nicht.
+   Reißt die Serie, bleibt der Rekord mit Rang sichtbar. Nur auf dem Schüler-iPad, nicht im Ergebnis-Code, keine Note. */
+const SERIE_START = '2026-11-17';
+const SERIE_RAENGE = [[3, 'tīrō'], [7, 'mīles'], [14, 'optiō'], [21, 'centuriō'], [30, 'tribūnus'], [50, 'lēgātus']];
+const serieRang = n => { let r = null; SERIE_RAENGE.forEach(([t, name]) => { if (n >= t) r = name; }); return r; };
+const serieNaechster = n => SERIE_RAENGE.find(([t]) => n < t);
+const wochenMontag = k => addDays(k, -((parseD(k).getDay() + 6) % 7));
+const tagMin = k => { const d = S.days[k]; return d ? Math.round(d.s / 60) : 0; };
+function serieDaten() { S.serie = S.serie || { joker: {}, rekord: 0 }; S.serie.joker = S.serie.joker || {}; return S.serie; }
+const jokerInWoche = k => { const m = wochenMontag(k), j = serieDaten().joker; return Object.keys(j).find(x => j[x] && wochenMontag(x) === m); };
+function serieStand() {
+  const sd = serieDaten(), heute = dkey(); let n = 0, best = 0;
+  for (let k = SERIE_START; k <= heute; k = addDays(k, 1)) {
+    if (tagMin(k) >= CFG.zielMin) n++;
+    else if (sd.joker[k] || k === heute) { /* Joker hält, heute ist noch offen */ }
+    else n = 0;
+    best = Math.max(best, n);
+  }
+  if (best > (sd.rekord || 0)) { sd.rekord = best; speichereS(); }
+  return { n, rekord: Math.max(best, sd.rekord || 0), heuteOk: tagMin(heute) >= CFG.zielMin };
+}
+function serieKarteHTML() {
+  if (dkey() < SERIE_START) return '';
+  const st = serieStand(), sd = serieDaten(), heute = dkey(), morgen = addDays(heute, 1), hMin = tagMin(heute);
+  const rang = serieRang(st.n), nae = serieNaechster(st.n);
+  const tage = Array.from({ length: 7 }, (_, i) => addDays(wochenMontag(heute), i)).map(k => {
+    const ok = tagMin(k) >= CFG.zielMin, j = sd.joker[k], vor = k < SERIE_START;
+    const z = vor ? '–' : ok ? '✓' : j ? '🛡' : k < heute ? '✗' : k === heute ? '·' : '';
+    const stil = ok ? '' : j ? 'background:var(--perg-2,#eee)' : (k < heute && !vor) ? 'opacity:.45' : '';
+    return `<span style="display:grid;gap:2px;justify-items:center"><span class="small muted">${WT[parseD(k).getDay()]}</span><span class="pip ${ok ? 'voll' : ''}" style="${stil}${k === heute ? ';box-shadow:0 0 0 2px var(--rot,#8B1A1A)' : ''}">${z}</span></span>`;
+  }).join('');
+  const jW = jokerInWoche(heute), jM = jokerInWoche(morgen);
+  let joker;
+  if (sd.joker[heute] || sd.joker[morgen]) {
+    const k = sd.joker[heute] ? heute : morgen;
+    joker = `<span class="small">🛡 Joker gesetzt für ${k === heute ? 'heute' : 'morgen'} (${fmtD(k)})</span> <button class="knopf klein leer" data-akt="serieJokerWeg" data-tag="${k}">Zurücknehmen</button>`;
+  } else {
+    const kn = [];
+    if (!st.heuteOk && !jW) kn.push(`<button class="knopf klein leer" data-akt="serieJoker" data-tag="${heute}">Joker für heute</button>`);
+    if (!jM) kn.push(`<button class="knopf klein leer" data-akt="serieJoker" data-tag="${morgen}">Joker für morgen</button>`);
+    joker = kn.length ? kn.join(' ') : `<span class="small muted">🛡 Joker dieser Woche schon verbraucht${jW ? ' (' + fmtD(jW) + ')' : ''}</span>`;
+  }
+  const titel = st.n ? `${st.n} ${st.n === 1 ? 'Tag' : 'Tage'} in Folge` : 'Starte deine Serie';
+  return `<div class="tafel"><div class="woche-kopf"><div><span class="eyebrow">Meine Serie${rang ? ' · ' + rang : ''}</span>
+    <h2><span aria-hidden="true">🔥</span> ${titel}</h2></div>
+    <div class="pips" style="gap:6px" aria-label="Diese Woche">${tage}</div></div>
+  <div class="small">${st.heuteOk ? `<b>Heute geschafft</b> – deine Serie wächst.` : `Heute: <b class="num">${hMin} von ${CFG.zielMin} Minuten</b> · noch ${CFG.zielMin - hMin} Min. für heute`}${nae ? ` · noch ${nae[0] - st.n} ${nae[0] - st.n === 1 ? 'Tag' : 'Tage'} bis <i>${nae[1]}</i>` : ''}</div>
+  <div class="reihe" style="align-items:center;gap:8px;flex-wrap:wrap">${joker}</div>
+  <p class="small muted">Jeder Tag mit ${CFG.zielMin} Minuten zählt, auch am Wochenende. Einmal pro Woche (Mo–So) darfst du einen Joker setzen: Dann reißt die Serie an dem Tag nicht, wächst aber auch nicht.${st.rekord ? ` Rekord: <b>${st.rekord} ${st.rekord === 1 ? 'Tag' : 'Tage'}</b>${serieRang(st.rekord) ? ' · <i>' + serieRang(st.rekord) + '</i>' : ''}.` : ''}<br>Ränge: ${SERIE_RAENGE.map(([t, r]) => `${t} <i>${r}</i>`).join(' · ')}</p></div>`;
+}
 const RENDER = {}, RENDER_NACH = {};
 function pflichtHTML() {
   const d = S.deck, ids = deckIds(), lek = d ? d.l : CFG.vorlageLektion, fe = zaehlFenster(), z = themenZaehlen(S, fe.bis, fe.von);
@@ -1177,7 +1229,7 @@ function pflichtHTML() {
 }
 RENDER.ueben = () => {
   const th = aktiveThemen();
-  return wochenKarteHTML() + pflichtHTML() + `
+  return serieKarteHTML() + wochenKarteHTML() + pflichtHTML() + `
   <div class="kacheln">
     <button class="kachel haupt castra-kachel" data-akt="spielCastra"><b>Castra</b><span>Jede richtige Antwort bringt ein Bauteil fürs Römerlager. Volle Reihen werden geräumt – Sonderaufgaben laden das Katapult.</span><span class="mini-castra" aria-hidden="true">${'<i></i>'.repeat(16)}</span></button>
     <button class="kachel haupt" data-akt="spielMauer"><b>Mauerbau</b><span>Jede richtige Antwort setzt einen Stein in die Stadtmauer. Mit Zeitdruck und Bestenliste.</span><span class="mini-mauer" aria-hidden="true">${'<i></i>'.repeat(15)}</span></button>
@@ -2219,6 +2271,8 @@ function csvExport() {
 
 /* ===================== Aktionen ===================== */
 const AKT = {
+  serieJoker(a) { const k = a.dataset.tag, h = dkey(); if ((k === h || k === addDays(h, 1)) && !jokerInWoche(k)) { serieDaten().joker[k] = true; speichereS(); } zeige(TAB); },
+  serieJokerWeg(a) { const k = a.dataset.tag; if (k >= dkey()) { delete serieDaten().joker[k]; speichereS(); } zeige(TAB); },
   rolleSchueler() { ROLE = 'schueler'; store.set('role', ROLE); TESTMODUS = false; store.set('testmodus', false); ladeS(); zeige('ueben'); },
   rolleLehrer() { pinAbfragen('Lehreransicht öffnen', () => { ROLE = 'lehrer'; store.set('role', ROLE); ladeT(); zeige('kurs'); }); },
   zurueckWillkommen() { ROLE = null; store.del('role'); zeige(null); },
