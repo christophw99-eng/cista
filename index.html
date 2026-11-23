@@ -393,6 +393,104 @@ const PRAES_END = {
   i:  { pr:['ior','īris','ītur','īmur','īminī','iuntur'], im:['iēbar','iēbāris','iēbātur','iēbāmur','iēbāminī','iēbantur'], fu:['iar','iēris','iētur','iēmur','iēminī','ientur'] },
   ki: { pr:['ior','eris','itur','imur','iminī','iuntur'], im:['iēbar','iēbāris','iēbātur','iēbāmur','iēbāminī','iēbantur'], fu:['iar','iēris','iētur','iēmur','iēminī','ientur'] }
 };
+
+// Verbformen aller Zeiten, Aktiv und Passiv (Christoph, 23.11.2026: vor der Klassenarbeit „Zeiten von Verben bestimmen können, im Aktiv und Passiv,
+// aber alle Zeiten – gerne auch mit Übersetzung“). Nur Verben, deren Perfektstamm (und PVP) bis L. 16 gelernt ist; regelmäßige ā-/ī-Verben wie in p16.
+// k: Konjugation (a, e, k = konsonantisch, i, ki = kons. mit i-Erweiterung) · st: Präsensstamm ohne Kennvokal · pf: Perfektstamm · pvp: PVP-Stamm
+// pass: 'voll' = Passiv in allen Personen · '3' = Passiv nur 3. Person (sonst unnatürlich: „ich werde gesagt“) · 'pf3' = nur Perf./Plqpf. Passiv, 3. Person (facere) · '' = kein Passiv
+// Deutsche Verben so gewählt, dass Infinitiv und Partizip II verschieden sind (sonst „ich werde verlassen“ = Futur Aktiv und Präsens Passiv).
+// de: Präsens (6 Formen) · pt: Präteritum (3. Sg.; ganze Reihe, wenn unregelmäßig) · p2: Partizip II · aux: h(aben)/s(ein) · inf · imp: Imperativ Sg.|Pl. · pp: Partizip fürs Passiv (wenn anders)
+const VERBEN = [
+  { la: 'laudāre', k: 'a', st: 'laud', pf: 'laudāv', pvp: 'laudāt', pass: 'voll', de: { inf: 'loben', pr: 'lobe|lobst|lobt|loben|lobt|loben', pt: 'lobte', p2: 'gelobt', aux: 'h', imp: 'lobe!|lobt!' } },
+  { la: 'vocāre', k: 'a', st: 'voc', pf: 'vocāv', pvp: 'vocāt', pass: 'voll', de: { inf: 'rufen', pr: 'rufe|rufst|ruft|rufen|ruft|rufen', pt: 'rief', p2: 'gerufen', aux: 'h', imp: 'rufe!|ruft!' } },
+  { la: 'servāre', k: 'a', st: 'serv', pf: 'servāv', pvp: 'servāt', pass: 'voll', de: { inf: 'retten', pr: 'rette|rettest|rettet|retten|rettet|retten', pt: 'rettete', p2: 'gerettet', aux: 'h', imp: 'rette!|rettet!' } },
+  { la: 'occupāre', k: 'a', st: 'occup', pf: 'occupāv', pvp: 'occupāt', pass: 'voll', de: { inf: 'besetzen', pr: 'besetze|besetzt|besetzt|besetzen|besetzt|besetzen', pt: 'besetzte', p2: 'besetzt', aux: 'h', imp: 'besetze!|besetzt!' } },
+  { la: 'appellāre', k: 'a', st: 'appell', pf: 'appellāv', pvp: 'appellāt', pass: 'voll', de: { inf: 'nennen', pr: 'nenne|nennst|nennt|nennen|nennt|nennen', pt: 'nannte', p2: 'genannt', aux: 'h', imp: 'nenne!|nennt!' } },
+  { la: 'mūtāre', k: 'a', st: 'mūt', pf: 'mūtāv', pvp: 'mūtāt', pass: 'voll', de: { inf: 'verändern', pr: 'verändere|veränderst|verändert|verändern|verändert|verändern', pt: 'veränderte', p2: 'verändert', aux: 'h', imp: 'verändere!|verändert!' } },
+  { la: 'iactāre', k: 'a', st: 'iact', pf: 'iactāv', pvp: 'iactāt', pass: '3', de: { inf: 'werfen', pr: 'werfe|wirfst|wirft|werfen|werft|werfen', pt: 'warf', p2: 'geworfen', aux: 'h', imp: 'wirf!|werft!' } },
+  { la: 'temptāre', k: 'a', st: 'tempt', pf: 'temptāv', pvp: '', pass: '', de: { inf: 'versuchen', pr: 'versuche|versuchst|versucht|versuchen|versucht|versuchen', pt: 'versuchte', p2: 'versucht', aux: 'h', imp: 'versuche!|versucht!' } },
+  { la: 'rīdēre', k: 'e', st: 'rīd', pf: 'rīs', pvp: 'rīs', pass: 'voll', de: { inf: 'lachen', pr: 'lache|lachst|lacht|lachen|lacht|lachen', pt: 'lachte', p2: 'gelacht', aux: 'h', imp: 'lache!|lacht!', pp: 'ausgelacht' } },
+  { la: 'monēre', k: 'e', st: 'mon', pf: 'monu', pvp: '', pass: '', de: { inf: 'ermahnen', pr: 'ermahne|ermahnst|ermahnt|ermahnen|ermahnt|ermahnen', pt: 'ermahnte', p2: 'ermahnt', aux: 'h', imp: 'ermahne!|ermahnt!' } },
+  { la: 'timēre', k: 'e', st: 'tim', pf: 'timu', pvp: '', pass: '', de: { inf: 'fürchten', pr: 'fürchte|fürchtest|fürchtet|fürchten|fürchtet|fürchten', pt: 'fürchtete', p2: 'gefürchtet', aux: 'h', imp: 'fürchte!|fürchtet!' } },
+  { la: 'iubēre', k: 'e', st: 'iub', pf: 'iuss', pvp: '', pass: '', de: { inf: 'befehlen', pr: 'befehle|befiehlst|befiehlt|befehlen|befehlt|befehlen', pt: 'befahl', p2: 'befohlen', aux: 'h', imp: 'befiehl!|befehlt!' } },
+  { la: 'appārēre', k: 'e', st: 'appār', pf: 'appāru', pvp: '', pass: '', de: { inf: 'erscheinen', pr: 'erscheine|erscheinst|erscheint|erscheinen|erscheint|erscheinen', pt: 'erschien', p2: 'erschienen', aux: 's', imp: 'erscheine!|erscheint!' } },
+  { la: 'dīcere', k: 'k', st: 'dīc', pf: 'dīx', pvp: 'dict', pass: '3', imp: 'dīc|dīcite', de: { inf: 'sagen', pr: 'sage|sagst|sagt|sagen|sagt|sagen', pt: 'sagte', p2: 'gesagt', aux: 'h', imp: 'sage!|sagt!' } },
+  { la: 'dūcere', k: 'k', st: 'dūc', pf: 'dūx', pvp: 'duct', pass: 'voll', imp: 'dūc|dūcite', de: { inf: 'führen', pr: 'führe|führst|führt|führen|führt|führen', pt: 'führte', p2: 'geführt', aux: 'h', imp: 'führe!|führt!' } },
+  { la: 'redūcere', k: 'k', st: 'redūc', pf: 'redūx', pvp: 'reduct', pass: 'voll', imp: 'redūc|redūcite', de: { inf: 'zurückführen', pr: 'führe zurück|führst zurück|führt zurück|führen zurück|führt zurück|führen zurück', pt: 'führte zurück', p2: 'zurückgeführt', aux: 'h', imp: 'führe zurück!|führt zurück!' } },
+  { la: 'pōnere', k: 'k', st: 'pōn', pf: 'posu', pvp: 'posit', pass: '3', de: { inf: 'stellen', pr: 'stelle|stellst|stellt|stellen|stellt|stellen', pt: 'stellte', p2: 'gestellt', aux: 'h', imp: 'stelle!|stellt!' } },
+  { la: 'pellere', k: 'k', st: 'pell', pf: 'pepul', pvp: 'puls', pass: 'voll', de: { inf: 'vertreiben', pr: 'vertreibe|vertreibst|vertreibt|vertreiben|vertreibt|vertreiben', pt: 'vertrieb', p2: 'vertrieben', aux: 'h', imp: 'vertreibe!|vertreibt!' } },
+  { la: 'remittere', k: 'k', st: 'remitt', pf: 'remīs', pvp: 'remiss', pass: 'voll', de: { inf: 'zurückschicken', pr: 'schicke zurück|schickst zurück|schickt zurück|schicken zurück|schickt zurück|schicken zurück', pt: 'schickte zurück', p2: 'zurückgeschickt', aux: 'h', imp: 'schicke zurück!|schickt zurück!' } },
+  { la: 'relinquere', k: 'k', st: 'relinqu', pf: 'relīqu', pvp: 'relict', pass: 'voll', de: { inf: 'zurücklassen', pr: 'lasse zurück|lässt zurück|lässt zurück|lassen zurück|lasst zurück|lassen zurück', pt: 'ließ zurück|ließest zurück|ließ zurück|ließen zurück|ließt zurück|ließen zurück', p2: 'zurückgelassen', aux: 'h', imp: 'lass zurück!|lasst zurück!' } },
+  { la: 'dēfendere', k: 'k', st: 'dēfend', pf: 'dēfend', pvp: 'dēfēns', pass: 'voll', de: { inf: 'verteidigen', pr: 'verteidige|verteidigst|verteidigt|verteidigen|verteidigt|verteidigen', pt: 'verteidigte', p2: 'verteidigt', aux: 'h', imp: 'verteidige!|verteidigt!' } },
+  { la: 'condere', k: 'k', st: 'cond', pf: 'condid', pvp: 'condit', pass: '3', de: { inf: 'gründen', pr: 'gründe|gründest|gründet|gründen|gründet|gründen', pt: 'gründete', p2: 'gegründet', aux: 'h', imp: 'gründe!|gründet!' } },
+  { la: 'scrībere', k: 'k', st: 'scrīb', pf: 'scrīps', pvp: 'scrīpt', pass: '3', de: { inf: 'schreiben', pr: 'schreibe|schreibst|schreibt|schreiben|schreibt|schreiben', pt: 'schrieb', p2: 'geschrieben', aux: 'h', imp: 'schreibe!|schreibt!' } },
+  { la: 'occīdere', k: 'k', st: 'occīd', pf: 'occīd', pvp: '', pass: '', de: { inf: 'töten', pr: 'töte|tötest|tötet|töten|tötet|töten', pt: 'tötete', p2: 'getötet', aux: 'h', imp: 'töte!|tötet!' } },
+  { la: 'opprimere', k: 'k', st: 'opprim', pf: 'oppress', pvp: 'oppress', pass: 'voll', de: { inf: 'unterdrücken', pr: 'unterdrücke|unterdrückst|unterdrückt|unterdrücken|unterdrückt|unterdrücken', pt: 'unterdrückte', p2: 'unterdrückt', aux: 'h', imp: 'unterdrücke!|unterdrückt!' } },
+  { la: 'reddere', k: 'k', st: 'redd', pf: 'reddid', pvp: 'reddit', pass: '3', de: { inf: 'zurückgeben', pr: 'gebe zurück|gibst zurück|gibt zurück|geben zurück|gebt zurück|geben zurück', pt: 'gab zurück', p2: 'zurückgegeben', aux: 'h', imp: 'gib zurück!|gebt zurück!' } },
+  { la: 'pūnīre', k: 'i', st: 'pūn', pf: 'pūnīv', pvp: 'pūnīt', pass: 'voll', de: { inf: 'bestrafen', pr: 'bestrafe|bestrafst|bestraft|bestrafen|bestraft|bestrafen', pt: 'bestrafte', p2: 'bestraft', aux: 'h', imp: 'bestrafe!|bestraft!' } },
+  { la: 'invenīre', k: 'i', st: 'inven', pf: 'invēn', pvp: 'invent', pass: 'voll', de: { inf: 'finden', pr: 'finde|findest|findet|finden|findet|finden', pt: 'fand|fandest|fand|fanden|fandet|fanden', p2: 'gefunden', aux: 'h', imp: 'finde!|findet!' } },
+  { la: 'audīre', k: 'i', st: 'aud', pf: 'audīv', pvp: 'audīt', pass: 'voll', de: { inf: 'hören', pr: 'höre|hörst|hört|hören|hört|hören', pt: 'hörte', p2: 'gehört', aux: 'h', imp: 'höre!|hört!' } },
+  { la: 'facere', k: 'ki', st: 'fac', pf: 'fēc', pvp: 'fact', pass: 'pf3', imp: 'fac|facite', de: { inf: 'machen', pr: 'mache|machst|macht|machen|macht|machen', pt: 'machte', p2: 'gemacht', aux: 'h', imp: 'mache!|macht!' } },
+  { la: 'accipere', k: 'ki', st: 'accip', pf: 'accēp', pvp: 'accept', pass: 'voll', de: { inf: 'annehmen', pr: 'nehme an|nimmst an|nimmt an|nehmen an|nehmt an|nehmen an', pt: 'nahm an', p2: 'angenommen', aux: 'h', imp: 'nimm an!|nehmt an!' } },
+  { la: 'recipere', k: 'ki', st: 'recip', pf: 'recēp', pvp: 'recept', pass: 'voll', de: { inf: 'aufnehmen', pr: 'nehme auf|nimmst auf|nimmt auf|nehmen auf|nehmt auf|nehmen auf', pt: 'nahm auf', p2: 'aufgenommen', aux: 'h', imp: 'nimm auf!|nehmt auf!' } },
+  { la: 'fugere', k: 'ki', st: 'fug', pf: 'fūg', pvp: '', pass: '', de: { inf: 'fliehen', pr: 'fliehe|fliehst|flieht|fliehen|flieht|fliehen', pt: 'floh', p2: 'geflohen', aux: 's', imp: 'flieh!|flieht!' } },
+  { la: 'iacere', k: 'ki', st: 'iac', pf: 'iēc', pvp: '', pass: '', de: { inf: 'werfen', pr: 'werfe|wirfst|wirft|werfen|werft|werfen', pt: 'warf', p2: 'geworfen', aux: 'h', imp: 'wirf!|werft!' } }
+];
+const AKT_END = {
+  a:  { pr: ['ō', 'ās', 'at', 'āmus', 'ātis', 'ant'], im: ['ābam', 'ābās', 'ābat', 'ābāmus', 'ābātis', 'ābant'], fu: ['ābō', 'ābis', 'ābit', 'ābimus', 'ābitis', 'ābunt'], imp: ['ā', 'āte'] },
+  e:  { pr: ['eō', 'ēs', 'et', 'ēmus', 'ētis', 'ent'], im: ['ēbam', 'ēbās', 'ēbat', 'ēbāmus', 'ēbātis', 'ēbant'], fu: ['ēbō', 'ēbis', 'ēbit', 'ēbimus', 'ēbitis', 'ēbunt'], imp: ['ē', 'ēte'] },
+  k:  { pr: ['ō', 'is', 'it', 'imus', 'itis', 'unt'], im: ['ēbam', 'ēbās', 'ēbat', 'ēbāmus', 'ēbātis', 'ēbant'], fu: ['am', 'ēs', 'et', 'ēmus', 'ētis', 'ent'], imp: ['e', 'ite'] },
+  i:  { pr: ['iō', 'īs', 'it', 'īmus', 'ītis', 'iunt'], im: ['iēbam', 'iēbās', 'iēbat', 'iēbāmus', 'iēbātis', 'iēbant'], fu: ['iam', 'iēs', 'iet', 'iēmus', 'iētis', 'ient'], imp: ['ī', 'īte'] },
+  ki: { pr: ['iō', 'is', 'it', 'imus', 'itis', 'iunt'], im: ['iēbam', 'iēbās', 'iēbat', 'iēbāmus', 'iēbātis', 'iēbant'], fu: ['iam', 'iēs', 'iet', 'iēmus', 'iētis', 'ient'], imp: ['e', 'ite'] }
+};
+const PF_END = ['ī', 'istī', 'it', 'imus', 'istis', 'ērunt'], PQ_END = ['eram', 'erās', 'erat', 'erāmus', 'erātis', 'erant'];
+
+// Relativsätze übersetzen (Christoph, 23.11.2026): je Satz zwei falsche Übersetzungen – falscher Bezug, falscher Kasus des
+// Relativpronomens (Subjekt/Objekt vertauscht), falsches Tempus oder Aktiv/Passiv im Relativsatz. Reihenfolge wie RELS bzw. RELS_UEB.
+const RELS_FALSCH = [
+  ['Der König rief die Wächter, die zornig waren.', 'Der König, der zornig gewesen war, rief die Wächter.'],
+  ['Das Mädchen, das den König lobte, war Cloelia.', 'Das Mädchen, das der König gelobt hatte, war Cloelia.'],
+  ['Die Geiseln, die Cloelia die Freiheit gaben, freuten sich.', 'Die Geiseln, deren Freiheit Cloelia gab, freuten sich.'],
+  ['Der Vertrag, der die Römer geschlossen hatte, wurde nicht gebrochen.', 'Der Vertrag, den die Römer geschlossen haben, wurde nicht gebrochen.'],
+  ['Porsenna warnte die Römer, deren Zorn groß war.', 'Porsenna, der zornig und groß war, warnte die Römer.'],
+  ['Porsenna ist der König, der die Römer fürchtet.', 'Porsenna ist der König, den die Römer fürchteten.'],
+  ['Cloelia ist das Mädchen, das die Wächter getäuscht haben.', 'Cloelia ist das Mädchen, das von den Wächtern getäuscht worden ist.'],
+  ['Die Boten, die den König gerufen haben, kommen zu den Römern.', 'Der Bote, den der König gerufen hat, kommt zu den Römern.'],
+  ['Die Statue, die die Römer aufgestellt hatten, ist in der Stadt.', 'Die Römer, die die Statue aufgestellt haben, sind in der Stadt.'],
+  ['Die Eltern, die ihre Töchter zurückbringen, freuen sich.', 'Die Eltern, deren Töchter zurückgebracht wurden, freuen sich.'],
+  ['Die Wächter, die zornig waren, wurden zum König gerufen.', 'Die Wächter riefen den König, der zornig war.'],
+  ['Wenn ihr sie dem König sofort zurückgebt, wird der Friedensvertrag, der den König mit euch geschlossen hat, nicht gebrochen.', 'Wenn ihr sie dem König sofort zurückgebt, wird der Friedensvertrag, den ihr mit dem König geschlossen habt, nicht gebrochen.'],
+  ['Sonst werden die Geiseln töten, die noch im Lager sind.', 'Sonst werden die Geiseln, die noch im Lager waren, getötet.'],
+  ['Der König, der geflohen ist, lässt die übrigen Mädchen bei ihren Eltern bleiben.', 'Der König lässt die übrigen Mädchen, die fliehen, bei ihren Eltern bleiben.'],
+  ['Wähle einige Geiseln aus, die dir die Freiheit geben wollen!', 'Wähle einige Geiseln aus, deren Freiheit du geben willst!'],
+  ['Cloelia und diejenigen Geiseln, die sie ausgewählt hatten, wurden zu ihren Eltern zurückgebracht.', 'Cloelia und diejenigen Geiseln, die sie ausgewählt hatte, brachten sie zu ihren Eltern zurück.'],
+  ['Das Mädchen, das die Tat der Römer und der Etrusker lobte, wurde wegen seiner Tapferkeit geehrt.', 'Das Mädchen, dessen Tat von den Römern und den Etruskern gelobt worden war, wurde wegen seiner Tapferkeit geehrt.']
+];
+const UEB_FALSCH = [
+  ['Romulus, den die Stadt gründete, war der König der Römer.', 'Romulus, der die Stadt gegründet hatte, war der König der Römer.'],
+  ['Die Wölfin ernährt die Jungen, die sich dem Ufer nähern.', 'Die Wölfin, die sich dem Ufer näherte, ernährt die Jungen.'],
+  ['Der Tempel, auf dem die Burg steht, ist groß.', 'Die Burg, auf der der Tempel steht, ist groß.'],
+  ['Aeneas, der in Flammen stand, verließ seine Heimat Troja.', 'Aeneas, dessen Heimat in Flammen steht, verließ Troja.'],
+  ['Troja, das die Mauern der Griechen bestürmte, war eine große Stadt.', 'Troja, dessen Mauern die Griechen bestürmt hatten, war eine große Stadt.'],
+  ['Der Hirte, der den Kindern gehorchte, war ein guter Mann.', 'Der Hirte, dessen Kinder gehorchten, war ein guter Mann.'],
+  ['Die Mutter, die dem Sohn ein Geschenk gibt, lacht.', 'Die Mutter, deren Sohn ein Geschenk gibt, lacht.'],
+  ['Die Trojaner führten das Pferd, das die Griechen zurückgelassen hatte, in die Stadt.', 'Die Trojaner führten das Pferd, das die Griechen zurückließen, in die Stadt.'],
+  ['Romulus, der die Stadt gründete, wurde Rom genannt.', 'Die Stadt, die Romulus gründet, wurde Rom genannt.'],
+  ['Das Geschenk, das die Trojaner den Griechen gaben, war eine große Gefahr.', 'Die Griechen, die den Trojanern ein Geschenk gaben, waren eine große Gefahr.'],
+  ['Aeneas, vor dem die Gefährten aus der Stadt flohen, sucht eine neue Heimat.', 'Aeneas, mit dem die Gefährten aus der Stadt geflohen waren, sucht eine neue Heimat.'],
+  ['Das Schiff, das Aeneas von Troja wegbringt, ist neu.', 'Das Schiff, mit dem Aeneas von Troja wegging, ist neu.'],
+  ['Den Plan, den die Griechen in Troja einnahmen, hatte Odysseus erdacht.', 'Den Plan, durch den Troja die Griechen einnahm, hatte Odysseus erdacht.'],
+  ['Die Griechen öffnen die Tore der Stadt, die im Pferd waren.', 'Die Griechen, die im Pferd gewesen waren, öffnen die Tore der Stadt.'],
+  ['Die Frauen flehen die Götter an, die im Tempel sitzen.', 'Die Frau, die im Tempel sitzt, fleht die Götter an.'],
+  ['Die Trümmer, in denen die Waffen liegen, gehören den Trojanern.', 'Die Waffen, die in den Trümmern lagen, gehören den Trojanern.'],
+  ['Die Trojaner, die die Stadt anzündeten, fliehen aus der Heimat.', 'Die Trojaner, denen die Stadt brannte, fliehen aus der Heimat.'],
+  ['Die Frauen, die mit den Männern kämpfen, haben Angst.', 'Die Männer, deren Frauen kämpfen, haben Angst.'],
+  ['Die Gefährten, die Aeneas den Schicksalsspruch erzählen, schweigen.', 'Die Gefährten, deren Schicksalsspruch Aeneas erzählt, schweigen.'],
+  ['Die Jungen, die die Wölfin ernähren, findet der Hirte am Ufer.', 'Die Wölfin, die die Jungen ernährt, findet der Hirte am Ufer.'],
+  ['Die Griechen gehen durch die Tore, die die Trojaner nicht verteidigten, in die Stadt.', 'Die Griechen, die die Trojaner nicht verteidigen, gehen durch die Tore in die Stadt.'],
+  ['Die Geschenke, die die Trojaner zurückließen, tragen die Griechen auf die Burg.', 'Das Geschenk, das die Griechen zurückließen, tragen die Trojaner auf die Burg.'],
+  ['Die Schwerter, gegen die die Soldaten kämpfen, sind groß.', 'Die Soldaten, die mit den Schwertern kämpfen, sind groß.']
+];
 </script>
 <script>/* ===================== Cista – Lateinkiste 8LA ===================== */
 'use strict';
@@ -415,7 +513,7 @@ const CFG = {
   zielVokFaktor: 2,         // jede Wochenkarte etwa zweimal
   zielVokMax: 60,           // höchstens so viele Vokabel-Antworten als Wochenziel
   vorlageLektion: 16,
-  fassung: '17.11.2026 · 12:50'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
+  fassung: '23.11.2026 · 23:50'   // wird im Tab „Kurs“ und bei Fehlermeldungen angezeigt
 };
 
 /* ---------- Hilfsfunktionen ---------- */
@@ -468,6 +566,32 @@ function wortSatz(name) {
   if (name === 'neu') return w.filter(v => !v.f.includes('r')).map(v => v.i);                  // laut Vokabelliste: neue Wörter + neue Bedeutungen, ohne „nur PVP neu“
   return w.map(v => v.i);                                                                     // alle, mit PVP-Stammformen
 }
+// Wiederholungsvokabular als eigene Rubrik (Christoph, 23.11.2026): Lernwörter aus früheren Lektionen,
+// die im Übungstext „Victōrēs umbrārum“ vorkommen (ohne Angaben und ohne sichere Kleinwörter wie et, nōn, sed, esse,
+// Personalpronomen, ā/ab, ē/ex, in + Abl.), dazu die fünf Wörter aus Aufgabe 4 des Übungstexts (cīvis, dextra, post, meus; neque steht in L. 16).
+// Einträge als [Lektion, Lernform] – so bleiben sie richtig, auch wenn sich die Reihenfolge im Wortschatz ändert.
+const WDH_LISTEN = {
+  ka16: { label: 'Wiederholungsvokabular', quelle: 'Übungstext „Victōrēs umbrārum“', ka: true, w: [
+    [0, 'clāmat'], [0, 'venit'], [1, 'subitō'], [1, 'rogat'], [1, 'tum'], [1, 'ibī'],
+    [2, 'puella'], [2, 'itaque'], [2, 'dēbēre'], [2, 'adhūc'], [2, 'cūr?'], [2, 'semper'], [2, 'statim'],
+    [3, 'ante'], [3, 'servāre'],
+    [4, 'magister'], [4, 'sedēre'], [4, 'discipulus / discipula'], [4, 'nōlī, nōlīte'], [4, 'ita'], [4, 'posteā'], [4, 'domum'],
+    [5, 'multī'], [5, 'statua'], [5, 'magnus'], [5, 'prope'], [5, 'īrātus'], [5, 'cupere'], [5, 'aut'], [5, 'aureus'], [5, 'Rōmānus'],
+    [6, 'meus, tuus, noster, vester'], [6, 'suus'], [6, 'eius / eōrum'], [6, 'tandem'], [6, 'cēterī'],
+    [8, 'mittere'], [8, 'iacēre'],
+    [10, 'procul'], [10, 'quondam'], [10, 'fugere'], [10, 'custōs'], [10, 'mīles'], [10, 'ad'],
+    [11, 'urbs'], [11, 'occīdere'], [11, 'appārēre'], [11, 'quia'], [11, 'īra'],
+    [12, 'novus'], [12, 'nōmen'], [12, 'temptāre'], [12, 'dextra'],
+    [13, 'habitāre'], [13, 'ipse'], [13, 'post'],
+    [14, 'occupāre'], [14, 'rēx'], [14, 'appellāre'],
+    [15, 'mūtāre'], [15, 'iacere'], [15, 'in'], [15, 'cīvis']
+  ] }
+};
+function listeAus(key) {
+  const L = WDH_LISTEN[key]; if (!L) return [];
+  const ids = L.w.map(([l, lat]) => V.findIndex(v => v.l === l && v.lat === lat)).filter(i => i >= 0);
+  return ids.length ? [{ label: L.label, ids, liste: key }] : [];
+}
 // Sonderfall: Abfrage nur mit Grammatik (Thema: Anzahl Aufgaben), z. B. nach den Ferien
 const NUR_GRAMMATIK = { '2026-10-26': { p16: 7, p15: 3 } };
 // Wochenvorlagen der Einheit L. 16: Wochen-Code am Dienstag, Abfrage am Montag „bis“
@@ -480,7 +604,9 @@ const PLAN = [
   { n: 4, ab: '2026-11-10', bis: '2026-11-16', titel: 'Woche 4', woerter: 'alle', wtext: 'alle Wörter L. 16 (auch die Stammformen der bekannten Verben)', themen: ['p16', 'f16', 'r16'], wdh: 0 },
   // Woche 5 (Christoph, 17.11.2026): Wiederholung vor der KA – alle 53 Wörter, keine früheren Lektionen, keine Mini-Sätze/PVP-Stammformen; Formen zuerst (3 × f16, 2 × p16, 2 × r16)
   { n: 5, ab: '2026-11-17', bis: '2026-11-23', titel: 'Woche 5 · Wiederholung', woerter: 'alle', wtext: 'alle Wörter L. 16 (Wiederholung, keine neuen)', themen: ['f16', 'p16', 'r16'], wdh: 0 },
-  { n: 6, ab: '2026-11-24', bis: '2026-11-30', titel: 'Woche 6 · Klassenarbeit', woerter: 'alle', wtext: 'alle Wörter L. 16', themen: ['p16', 'r16', 'm16', 's16'], wdh: 0, ka: true }
+  // Woche 6 (Christoph, 23.11.2026): keine Abfrage, nur für die Klassenarbeit am 30.11. – alle Wörter L. 16 + Wiederholungsvokabular aus dem Übungstext;
+  // Verbformen aller Zeiten (Aktiv und Passiv) bestimmen und übersetzen; Relativpronomen vor allem bestimmen und übersetzen
+  { n: 6, ab: '2026-11-24', bis: '2026-11-30', titel: 'Woche 6 · Klassenarbeit', woerter: 'alle', wtext: 'alle Wörter L. 16 + Wiederholungsvokabular aus dem Übungstext (Rubrik zum Auswählen)', themen: ['z16', 'r16', 'f16'], wdh: 0, ka: true, liste: 'ka16' }
 ];
 // Zusatz-Wiederholung, z. B. '15+1-4' -> [{label:'L. 15', ids}, {label:'L. 1–4', ids}]
 function extraAus(txt) {
@@ -552,6 +678,117 @@ function praesForm(qi, art) {
     erk: `${la} = ${PERS[p]} ${TEMP15[tmp]}. Übersetzung: ${de(tmp)}.`
   };
 }
+/* ---------- Verbformen aller Zeiten, Aktiv und Passiv (Woche 6, Christoph 23.11.2026) ----------
+   Wie in Aufgabe 2 der Klassenarbeit: Form bestimmen (Person, Tempus, Aktiv/Passiv) – und übersetzen.
+   Formen werden aus VERBEN (data_extra.js) gebildet; Formen, die zu mehreren Bestimmungen passen (dēfendit, occīdit …), kommen nicht dran. */
+const VT = ['pr', 'im', 'fu', 'pf', 'pq'];
+const VT_NAME = { pr: 'Präsens', im: 'Imperfekt', fu: 'Futur', pf: 'Perfekt', pq: 'Plusquamperfekt' };
+const DE_HAB = { pr: ['habe', 'hast', 'hat', 'haben', 'habt', 'haben'], pt: ['hatte', 'hattest', 'hatte', 'hatten', 'hattet', 'hatten'] };
+const DE_SEIN = { pr: ['bin', 'bist', 'ist', 'sind', 'seid', 'sind'], pt: ['war', 'warst', 'war', 'waren', 'wart', 'waren'] };
+const DE_WERD = { pr: ['werde', 'wirst', 'wird', 'werden', 'werdet', 'werden'], pt: ['wurde', 'wurdest', 'wurde', 'wurden', 'wurdet', 'wurden'] };
+const PVP_END = { m: ['us', 'ī'], f: ['a', 'ae'], n: ['um', 'a'] };
+const vfLabel = c => c.t === 'imp' ? 'Imperativ ' + (c.p ? 'Pl.' : 'Sg.') : `${PERS[c.p]} ${VT_NAME[c.t]} ${c.g === 'P' ? 'Passiv' : 'Aktiv'}`;
+const vfGleich = (a, b) => a.g === b.g && a.t === b.t && a.p === b.p;
+function vfPassivOk(v, t, p) {
+  if (!v.pass) return false;
+  if (v.pass === 'pf3') return (t === 'pf' || t === 'pq') && (p === 2 || p === 5);
+  if (v.pass === '3') return p === 2 || p === 5;
+  return true;
+}
+// alle Felder, die bei einem Verb drankommen können (kons./ī-Erweiterung: 2. Sg. Präsens/Futur Passiv nicht – dūceris/dūcēris unterscheidet nur die Länge)
+function vfZellen(v) {
+  const z = [];
+  VT.forEach(t => { for (let p = 0; p < 6; p++) z.push({ g: 'A', t, p }); });
+  VT.forEach(t => { for (let p = 0; p < 6; p++) if (vfPassivOk(v, t, p) && !((v.k === 'k' || v.k === 'ki') && p === 1 && (t === 'pr' || t === 'fu'))) z.push({ g: 'P', t, p }); });
+  z.push({ g: 'A', t: 'imp', p: 0 }, { g: 'A', t: 'imp', p: 1 });
+  return z;
+}
+function vfLatein(v, c, gen = 'm') {
+  const E = AKT_END[v.k];
+  if (c.t === 'imp') return v.imp ? v.imp.split('|')[c.p] : v.st + E.imp[c.p];
+  if (c.g === 'A') return c.t === 'pf' ? v.pf + PF_END[c.p] : c.t === 'pq' ? v.pf + PQ_END[c.p] : v.st + E[c.t][c.p];
+  if (c.t === 'pf' || c.t === 'pq') return v.pvp + PVP_END[gen][c.p < 3 ? 0 : 1] + ' ' + AUX_LA[c.t][c.p];
+  return v.st + PRAES_END[v.k][c.t][c.p];
+}
+function dePraet(pt, p) {
+  if (pt.includes('|')) return pt.split('|')[p];
+  const [tok, ...rest] = pt.split(' '); const end = /te$/.test(tok) ? ['', 'st', '', 'n', 't', 'n'] : ['', 'st', '', 'en', 't', 'en'];
+  return [tok + end[p], ...rest].join(' ');
+}
+function vfDeutsch(v, c, s3 = 'er') {
+  const d = v.de, p = c.p, s = ['ich', 'du', s3, 'wir', 'ihr', 'sie'][p];
+  if (c.t === 'imp') return d.imp.split('|')[p];
+  if (c.g === 'A') {
+    if (c.t === 'pr') return `${s} ${d.pr.split('|')[p]}`;
+    if (c.t === 'im') return `${s} ${dePraet(d.pt, p)}`;
+    if (c.t === 'fu') return `${s} ${DE_WERD.pr[p]} ${d.inf}`;
+    return `${s} ${(d.aux === 's' ? DE_SEIN : DE_HAB)[c.t === 'pf' ? 'pr' : 'pt'][p]} ${d.p2}`;
+  }
+  const pp = d.pp || d.p2;
+  return { pr: `${s} ${DE_WERD.pr[p]} ${pp}`, im: `${s} ${DE_WERD.pt[p]} ${pp}`, fu: `${s} ${DE_WERD.pr[p]} ${pp} werden`, pf: `${s} ${DE_SEIN.pr[p]} ${pp} worden`, pq: `${s} ${DE_SEIN.pt[p]} ${pp} worden` }[c.t];
+}
+// Formen, die nur zu genau einer Bestimmung passen (mit Längenzeichen verglichen)
+function vfEindeutig(v) {
+  const alle = []; ['A', 'P'].forEach(g => VT.forEach(t => { for (let p = 0; p < 6; p++) alle.push({ g, t, p }); })); alle.push({ g: 'A', t: 'imp', p: 0 }, { g: 'A', t: 'imp', p: 1 });
+  const n = {}; alle.forEach(c => { if (c.g === 'P' && !v.pass) return; const f = vfLatein(v, c); n[f] = (n[f] || 0) + 1; });
+  return vfZellen(v).filter(c => n[vfLatein(v, c)] === 1);
+}
+const VF_VERWECHSLUNG = { pr: ['fu', 'pf'], im: ['fu', 'pq'], fu: ['pr', 'im'], pf: ['pq', 'pr'], pq: ['pf', 'im'] };
+function vfHinweis(v, c) {
+  if (c.t === 'imp') return 'Befehlsform (Imperativ)';
+  if (c.g === 'P' && c.t === 'pf') return 'PVP + Präsens von esse';
+  if (c.g === 'P' && c.t === 'pq') return 'PVP + Imperfekt von esse';
+  const pass = c.g === 'P' ? ', Passivendung' : '';
+  if (c.t === 'pr') return 'Präsensstamm + Personalendung' + pass;
+  if (c.t === 'im') return 'Kennzeichen -ba-' + pass;
+  if (c.t === 'fu') return (v.k === 'a' || v.k === 'e' ? 'Kennzeichen -b- (Futur der ā-/ē-Konjugation)' : 'Kennzeichen -a-/-e- (Futur der kons./ī-Konjugation)') + pass;
+  return `Perfektstamm ${v.pf}- + ${c.t === 'pf' ? 'Perfektendung' : '-era-'}`;
+}
+function verbFrage(vi, art) {
+  const v = VERBEN[vi]; const zellen = vfEindeutig(v);
+  // gleichmäßig: erst Aktiv/Passiv (und selten Imperativ), dann Tempus, dann Person
+  const r = Math.random(); const hatP = zellen.some(c => c.g === 'P');
+  const gWahl = r < .08 ? 'imp' : hatP && r < .54 ? 'P' : 'A';
+  let kand = zellen.filter(c => gWahl === 'imp' ? c.t === 'imp' : c.g === gWahl && c.t !== 'imp');
+  const t = pick([...new Set(kand.map(c => c.t))]); kand = kand.filter(c => c.t === t);
+  const c = pick(kand);
+  // Passiv nur in der 3. Person (dīcere, scrībere, facere …): sächlich – „es ist gesagt worden“
+  const gen = c.g === 'P' && v.pass !== 'voll' ? 'n' : c.g === 'P' && (c.t === 'pf' || c.t === 'pq') ? pick(c.p === 2 || c.p === 5 ? ['m', 'f', 'n'] : ['m', 'f']) : pick(['m', 'f']);
+  const s3 = { m: 'er', f: 'sie', n: 'es' }[gen];
+  const la = vfLatein(v, c, gen), de = vfDeutsch(v, c, s3), lab = vfLabel(c);
+  const zweite = c.t === 'pf' ? ` (auch: ${c.g === 'A' ? `${['ich', 'du', s3, 'wir', 'ihr', 'sie'][c.p]} ${dePraet(v.de.pt, c.p)}` : `${['ich', 'du', s3, 'wir', 'ihr', 'sie'][c.p]} ${DE_WERD.pt[c.p]} ${v.de.pp || v.de.p2}`})` : '';
+  const erk = `${la} (von ${v.la}) = ${lab}: ${vfHinweis(v, c)}. Übersetzung: ${de}${zweite}.`;
+  const gleicheForm = x => vfLatein(v, x, gen) === la;
+  const kopf = 'Verbformen · alle Zeiten';
+  if ((art || pick(['ue', 'be'])) === 'be') {
+    const cands = [];
+    const add = x => { if (x && !vfGleich(x, c) && !gleicheForm(x) && !cands.some(y => vfLabel(y) === vfLabel(x))) cands.push(x); };
+    if (c.t === 'imp') { add({ g: 'A', t: 'pr', p: c.p ? 4 : 1 }); add({ g: 'A', t: 'imp', p: 1 - c.p }); add({ g: 'A', t: 'fu', p: c.p ? 4 : 1 }); }
+    else {
+      const vw = (c.t === 'fu' && (v.k === 'a' || v.k === 'e')) ? 'im' : (c.t === 'fu' ? 'pr' : VF_VERWECHSLUNG[c.t][0]);
+      add({ g: c.g, t: vw, p: c.p });
+      add({ g: c.g, t: c.t, p: pick([0, 1, 2, 3, 4, 5].filter(p => p !== c.p)) });
+      add({ g: c.g === 'A' ? 'P' : 'A', t: c.t, p: c.p });
+    }
+    while (cands.length < 3) add({ g: pick(['A', 'P']), t: pick(VT), p: pick([0, 1, 2, 3, 4, 5]) });
+    return { id: 'z' + vi, art: kopf, lead: 'Bestimme die Form:', prompt: la, lat: true,
+      opts: shuffle([{ t: lab, ok: true }, ...cands.slice(0, 3).map(x => ({ t: vfLabel(x) }))]), erk };
+  }
+  // Übersetzen: gleiche Person, andere Zeit bzw. Aktiv/Passiv; Imperfekt und Perfekt nie gegeneinander (beide oft mit Präteritum übersetzt)
+  const partner = c.t === 'im' ? 'pf' : c.t === 'pf' ? 'im' : '';
+  const ds = [];
+  const add = x => { if (!x || vfGleich(x, c) || (x.g === c.g && x.t === partner)) return; if (x.g === 'P' && !vfPassivOk(v, x.t, x.p)) return; const t = vfDeutsch(v, x, s3); if (t !== de && !ds.includes(t)) ds.push(t); };
+  if (c.t === 'imp') { add({ g: 'A', t: 'pr', p: c.p ? 4 : 1 }); add({ g: 'A', t: 'fu', p: c.p ? 4 : 1 }); add({ g: 'A', t: 'pq', p: c.p ? 4 : 1 }); add({ g: 'A', t: 'im', p: c.p ? 4 : 1 }); }
+  else {
+    VF_VERWECHSLUNG[c.t].forEach(t => add({ g: c.g, t, p: c.p }));
+    add({ g: c.g === 'A' ? 'P' : 'A', t: c.t, p: c.p });
+    shuffle(VT).forEach(t => add({ g: c.g, t, p: c.p }));
+    shuffle(VT).forEach(t => add({ g: c.g === 'A' ? 'P' : 'A', t, p: c.p }));
+  }
+  const wahl = [ds[0], ...shuffle(ds.slice(1)).slice(0, 2)].filter(Boolean);
+  return { id: 'z' + vi, art: kopf, lead: 'Übersetze:', prompt: la, lat: true,
+    opts: shuffle([{ t: de, ok: true }, ...wahl.map(t => ({ t }))]), erk };
+}
 function falschPPP(s) {
   const p = plain(s.inf), st = s.inf.slice(0, -3);
   return /are$/.test(p) ? st + 'itum' : /ire$/.test(p) ? st + 'ātum' : st + 'ātum';
@@ -603,13 +840,14 @@ const THEMEN = {
   r16: { name: 'Relativpronomen im Satz', l: 16, ids: RELS_UEB.map((_, i) => 'u' + i) },   // Üben: nur Übungssätze
   m16: { name: 'Mini-Sätze übersetzen (Drei Fassungen)', l: 16, ids: FASS.map((_, i) => 'm' + i) },
   s16: { name: 'PVP-Stammformen', l: 16, ids: STAMM.map((_, i) => 's' + i) },
-  p15: { name: 'Passiv im Präsens, Imperfekt, Futur', l: 15, ids: PRAES.map((_, i) => 'q' + i) }
+  p15: { name: 'Passiv im Präsens, Imperfekt, Futur', l: 15, ids: PRAES.map((_, i) => 'q' + i) },
+  z16: { name: 'Verbformen: alle Zeiten, Aktiv und Passiv', l: 16, ids: VERBEN.map((_, i) => 'z' + i) }
 };
 const THEMEN_STANDARD = ['p16', 'r16', 'm16'];
 // Abfragesätze (aus AB 04, AB 05, Lektionstext) – nur in der echten Montagsabfrage (Christoph, 3.11.2026)
 const ABFRAGE_SAETZE = RELS.map((_, i) => 'r' + i);
-const themaVon = id => ({ v: 'vok', g: 'vok', p: 'p16', r: 'r16', u: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16' })[id[0]];
-const gueltig = id => { const n = +id.slice(1); return Number.isInteger(n) && n >= 0 && !!({ v: V, p: PPPV, r: RELS, u: RELS_UEB, m: FASS, q: PRAES, s: STAMM, f: RPF }[id[0]] || [])[n]; };
+const themaVon = id => ({ v: 'vok', g: 'vok', p: 'p16', r: 'r16', u: 'r16', m: 'm16', q: 'p15', s: 's16', f: 'f16', z: 'z16' })[id[0]];
+const gueltig = id => { const n = +id.slice(1); return Number.isInteger(n) && n >= 0 && !!({ v: V, p: PPPV, r: RELS, u: RELS_UEB, m: FASS, q: PRAES, s: STAMM, f: RPF, z: VERBEN }[id[0]] || [])[n]; };
 // Relativpronomen im Satz (Umbau 17.11.2026, Wunsch der Schüler: Einsetzen war zu schwer).
 // Statt einzusetzen, erkennen die Schüler das Relativpronomen im fertigen Satz – in zwei Aufgabenarten:
 //   'ue' = Bezugswort finden (daraus Genus und Numerus) · 'be' = Relativpronomen in diesem Satz bestimmen (Kasus aus dem Relativsatz)
@@ -633,7 +871,14 @@ function relSatzFrage(typ, n, art) {
   const prompt = satz.replace('___', '«' + rp + '»');
   const kopf = typ === 'r' ? 'Relativpronomen im Satz' + (quelle ? ' · ' + quelle : '') : 'Relativpronomen im Satz · Übung';
   const erk = why + ' – ' + de;
-  if ((art || pick(['ue', 'be'])) === 'ue') {
+  const a = art || pick(['ue', 'be', 'be', 'ub', 'ub']);   // vor allem bestimmen und übersetzen (Christoph, 23.11.2026)
+  // Übersetzen (ab 23.11.2026): richtige Übersetzung gegen zwei typische Fehler (Bezug, Kasus des Relativpronomens, Tempus/Genus im Relativsatz)
+  if (a === 'ub') {
+    const falsch = (typ === 'r' ? RELS_FALSCH : UEB_FALSCH)[n] || [];
+    return { id: typ + n, art: kopf, lead: 'Welche Übersetzung stimmt?', prompt, lat: true, satz: true, lang: true,
+      opts: shuffle([{ t: de, ok: true }, ...falsch.map(t => ({ t }))]), erk: why + ' – Achte auf den Bezug und den Kasus des Relativpronomens.' };
+  }
+  if (a === 'ue') {
     return { id: typ + n, art: kopf, lead: `Auf welches Wort bezieht sich «${rp}»?`, prompt, lat: true, satz: true,
       opts: shuffle(REL_BEZUG[typ][n].map((t, i) => ({ t: satz.toLowerCase().startsWith(t.toLowerCase()) ? satz.slice(0, t.length) : t, ok: i === 0 }))), optLat: true, erk };   // Schreibweise wie im Satz
   }
@@ -682,6 +927,7 @@ function frageAus(id, art) {
   if (id[0] === 'q') return praesForm(n, art);
   if (id[0] === 's') return stammFrage(n, art);
   if (id[0] === 'f') return relForm(n, art);
+  if (id[0] === 'z') return verbFrage(n, art);
   return fassFrage(n);
 }
 /* ---------- Eingabe-Aufgaben der Montagsabfrage (ab 2.11.2026) ----------
@@ -824,8 +1070,12 @@ function ladeS() {
   S = store.get(sKey(), null);
   if (S) { S.box = S.box || {}; S.days = S.days || {}; S.tests = S.tests || {}; }
   if (S && S.deck && S.deck.ferien) { const p = PLAN.find(x => x.ferien && x.bis === S.deck.week); if (p) S.deck.extra = extraAus(p.ferien.extra); }
+  if (S && S.deck && S.deck.liste) S.deck.extra = listeAus(S.deck.liste);
 }
 const wdhName = d => d.extra.map(g => g.label).join(' und ');
+// Rubrik aus einer festen Liste (z. B. Wiederholungsvokabular vor der Klassenarbeit) statt Ferien-/Lektionswiederholung
+const wdhListe = d => d && d.extra && d.extra.length && d.extra[0].liste ? WDH_LISTEN[d.extra[0].liste] : null;
+const wdhTitel = d => wdhListe(d) ? wdhListe(d).label : d.ferien ? 'Ferien-Wiederholung' : 'Wiederholung';
 function speichereS() { store.set(sKey(), S); }
 function ladeT() { T = store.get('lehrer', null) || { roster: [], results: {}, demo: false }; }
 function speichereT() { store.set('lehrer', T); }
@@ -877,7 +1127,12 @@ function gramZiehen(zuletzt) {
   const th = aktiveThemen(); if (!th.length) return null;
   const z = themenZaehlen(S, weekKey()); const min = Math.min(...th.map(t => z[t] || 0));
   const t = pick(th.filter(x => (z[x] || 0) <= min + 3));
-  return naechste(THEMEN[t].ids, zuletzt);
+  return naechste(themaIds(t), zuletzt);
+}
+// In der Klassenarbeitswoche gibt es keine Abfrage mehr: Dann dürfen auch die Unterrichtssätze (AB 04, AB 05, Lektionstext) geübt werden.
+function themaIds(t, d = S && S.deck) {
+  if (t === 'r16' && d && d.ka) return [...THEMEN.r16.ids, ...ABFRAGE_SAETZE];
+  return THEMEN[t].ids;
 }
 function deckIds(d = S.deck) { return (d && d.ids && d.ids.length) ? d.ids : vorlageDeck(); }
 // Vokabel ziehen: Karten der Woche, bei Ferienprogramm je nach Wahl auch die Wiederholung
@@ -1237,9 +1492,9 @@ function pflichtHTML() {
   const zeile = (name, n, ziel, sub) => { const fertig = n >= ziel; return `<div style="display:grid;gap:5px"><div class="kopfzeile"><span><b>${name}</b>${sub ? ` <span class="small muted">${sub}</span>` : ''}</span><span class="chip ${fertig ? 'ok' : 'neutral'} num">${fertig ? '✓ ' : ''}${Math.min(n, ziel)} / ${ziel}</span></div><div class="balken"><i style="width:${Math.min(100, n / ziel * 100)}%"></i></div></div>`; };
   const th = aktiveThemen();
   const titel = !gilt ? 'Wird am Montag abgefragt' : d.ka ? `Für die Klassenarbeit am ${fmtD(d.week)}` : `Wird am ${fmtD(d.week)} abgefragt`;
-  const wahl = d && d.extra && d.extra.length ? `<div style="display:grid;gap:5px"><div class="kopfzeile"><span><b>${d.ferien ? 'Ferien-Wiederholung' : 'Wiederholung'}</b> <span class="small muted">${esc(wdhName(d))} · freiwillig, wird nicht abgefragt</span></span><span class="chip neutral num">${z.wdh || 0} Antworten</span></div></div>
-    <div class="feld"><label for="wdh-wahl">Vokabeln in Mauerbau, Schnellrunde und Karteikasten</label><select id="wdh-wahl">
-    ${[['mix', 'Karten der Woche und Wiederholung gemischt'], ['woche', 'nur die Karten der Woche'], ...d.extra.map(g => [g.label, 'nur Wiederholung ' + g.label])].map(([v, t]) => `<option value="${esc(v)}" ${(S.wdhWahl || 'mix') === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>` : '';
+  const wahl = d && d.extra && d.extra.length ? `<div style="display:grid;gap:5px"><div class="kopfzeile"><span><b>${esc(wdhTitel(d))}</b> <span class="small muted">${wdhListe(d) ? `${d.extra[0].ids.length} Wörter aus früheren Lektionen · aus dem ${esc(wdhListe(d).quelle)}${d.ka ? ' · wichtig für die Klassenarbeit' : ''}` : esc(wdhName(d)) + ' · freiwillig, wird nicht abgefragt'}</span></span><span class="chip neutral num">${z.wdh || 0} Antworten</span></div></div>
+    <div class="feld"><label for="wdh-wahl">Vokabeln in Castra, Mauerbau, Schnellrunde, Karteikasten und Tipp-Training</label><select id="wdh-wahl">
+    ${[['mix', 'Karten der Woche und Wiederholung gemischt'], ['woche', 'nur die Karten der Woche'], ...d.extra.map(g => [g.label, g.liste ? 'nur ' + g.label : 'nur Wiederholung ' + g.label])].map(([v, t]) => `<option value="${esc(v)}" ${(S.wdhWahl || 'mix') === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>` : '';
   return `<div class="tafel"><div class="kopfzeile"><div><span class="eyebrow">${d && d.ferien && gilt ? 'Das übst du bis zur Abfrage' : 'Das übst du diese Woche'}</span><h3 style="margin-top:4px">${titel}</h3></div><button class="knopf klein leer" data-akt="wocheScannen">Wochen-Code scannen</button></div>
   ${zeile('Vokabeln', z.vok || 0, Math.min(CFG.zielVokMax, ids.length * CFG.zielVokFaktor), ids.length + ' Karten aus ' + lekName(lek) + (d ? '' : ', Vorlage'))}
   ${th.map(t => zeile(THEMEN[t].name, z[t] || 0, CFG.zielThema, lekName(THEMEN[t].l))).join('')}
@@ -1256,7 +1511,7 @@ RENDER.ueben = () => {
     <button class="kachel" data-akt="kartei"><b>Karteikasten</b><span>Karte umdrehen und selbst einschätzen. Was sitzt, wandert ins nächste Fach.</span></button>
     <button class="kachel" data-akt="tippTraining" style="grid-column:1/-1"><b>Tipp-Training · wie in der Abfrage</b><span>Bedeutungen, Stammformen bzw. Genitiv und Genus${aktiveThemen().includes('f16') ? ' und Formen des Relativpronomens' : ''} eintippen – genau so, wie es in der Montagsabfrage drankommt.</span></button>
     ${th.length ? `<button class="kachel" data-akt="formen" style="grid-column:1/-1"><b>Grammatik-Training</b><span>${th.map(t => esc(THEMEN[t].name)).join(' · ')}</span></button>` : ''}
-    ${S.deck && S.deck.extra && S.deck.extra.length ? `<button class="kachel" data-akt="wdhRunde" style="grid-column:1/-1"><b>${S.deck.ferien ? 'Ferien-Wiederholung' : 'Wiederholung'}</b><span>Vokabeln aus ${esc(wdhName(S.deck))} · 10 Fragen · freiwillig${S.deck.ferien ? ', zählt fürs Ferienprogramm' : ''}</span></button>` : ''}
+    ${S.deck && S.deck.extra && S.deck.extra.length ? `<button class="kachel" data-akt="wdhRunde" style="grid-column:1/-1"><b>${esc(wdhTitel(S.deck))}</b><span>${wdhListe(S.deck) ? `${S.deck.extra[0].ids.length} Wörter aus früheren Lektionen, die im ${esc(wdhListe(S.deck).quelle)} vorkommen · 10 Fragen` : `Vokabeln aus ${esc(wdhName(S.deck))} · 10 Fragen · freiwillig${S.deck.ferien ? ', zählt fürs Ferienprogramm' : ''}`}</span></button>` : ''}
     <button class="kachel" data-akt="plenumStart" style="grid-column:1/-1"><b>Plenum · im Unterricht</b><span>Formen von ${esc(PLENUM[PLENUM_STANDARD].titel)} gemeinsam zusammentragen – Schritt für Schritt mit der Tafel</span></button>
     ${fehlerIds().length ? `<button class="kachel" data-akt="fehlerTraining" style="grid-column:1/-1"><b>Fehler-Training</b><span>${fehlerIds().length} Aufgaben, die in deinen Abfragen falsch waren</span></button>` : ''}
   </div>`;
@@ -1351,7 +1606,7 @@ function rundeStarten(art) {
   const pool = art === 'fehler' ? fehlerIds() : art === 'wdh' && S.deck && S.deck.extra ? S.deck.extra.flatMap(g => g.ids).map(i => 'v' + i) : null;
   SITZ = { art, nr: 0, max: 10, richtig: 0, zuletzt: [], pool };
   if ((art === 'fehler' || art === 'wdh') && !(pool && pool.length)) { SITZ = null; toast(art === 'fehler' ? 'Keine Fehler gespeichert.' : 'Keine Wiederholung vorhanden.'); return; }
-  ovOeffnen(art === 'formen' ? 'Grammatik-Training' : art === 'fehler' ? 'Fehler-Training' : art === 'wdh' ? (S.deck.ferien ? 'Ferien-Wiederholung' : 'Wiederholung') : 'Schnellrunde'); rundeFrage();
+  ovOeffnen(art === 'formen' ? 'Grammatik-Training' : art === 'fehler' ? 'Fehler-Training' : art === 'wdh' ? wdhTitel(S.deck) : 'Schnellrunde'); rundeFrage();
 }
 function rundeFrage() {
   const s = SITZ; if (s.nr >= s.max) return rundeEnde();
@@ -1834,6 +2089,8 @@ function probeAbgeben(s) {
 }
 function probeKarteHTML() {
   const d = S.deck; if (d && d.ka && d.week === abfrageMontag()) return '';
+  if (d && d.ka && d.week >= dkey()) return `<div class="tafel"><span class="eyebrow">Keine Abfrage</span><h3>Am ${fmtD(d.week)} schreibt ihr die Klassenarbeit</h3>
+  <p>Diese Woche gibt es keine Montagsabfrage und keinen Probetest. Übe unter „Üben“: die Wörter aus L. 16, ${d.extra && d.extra.length ? 'das ' + esc(wdhTitel(d)) + ', ' : ''}die Grammatik-Themen der Woche und das Fehler-Training.</p></div>`;
   const anz = abfrageAnzahl(d), n = probeAnzahl(dkey());
   return `<div class="tafel"><span class="eyebrow">Zum Üben · zählt nicht für die Note</span><h3>Probetest</h3>
   <p>Genau wie die Montagsabfrage: ${anz} Fragen · ${abfrageDauer(d) / 60} Minuten, mit deinen Karten und der Grammatik dieser Woche. So oft du willst – die Aufgaben werden jedes Mal neu gemischt.</p>
@@ -1942,7 +2199,7 @@ function wahlAusPlan(n) {
   return { fuer, plan: p.n, lek: 16, ids: wortSatz(p.woerter), themen: p.themen.slice(), wdh: p.wdh, ferien: !!p.ferien, sig: planSig(p) };
 }
 // Kennung einer Vorlage: Ändert sich die Vorlage (neue Cista-Fassung), wird eine gespeicherte Auswahl dazu verworfen
-const planSig = p => p ? [p.n, p.woerter, p.themen.join('.'), p.wdh].join('|') : '';
+const planSig = p => p ? [p.n, p.woerter, p.themen.join('.'), p.wdh, p.liste || ''].join('|') : '';
 function wahlLaden() {
   const f = planFuer(); const w = store.get('wahl', null);
   const passt = w && w.fuer === (f ? f.n : 'eigen') && (w.plan === 'eigen' || w.sig === planSig(PLAN.find(x => x.n === w.plan)));
@@ -2315,6 +2572,7 @@ const AKT = {
       const deck = { week: wk, l: +l, ids: ids.split('.').map(Number).filter(i => V[i]), themen: th === undefined ? THEMEN_STANDARD : th.split('.').filter(x => THEMEN[x]), seit: dkey() };
       (opt || '').split('~').forEach(o => {
         if (o === 'k') deck.ka = true;
+        if (o[0] === 'x' && WDH_LISTEN[o.slice(1)]) { deck.liste = o.slice(1); deck.extra = listeAus(deck.liste); }
         if (o[0] === 'f') { const [von, bis, tage, ex] = o.slice(1).split('_'); deck.ferien = { von: datumLang(von), bis: datumLang(bis), tage: +tage }; deck.extra = extraAus(ex); }
         if (o[0] === 'p') { const d = korrekturAnwenden(o); if (d) korrigiert.push(d); }
       });
@@ -2430,12 +2688,13 @@ const AKT = {
     const alle = [...w.ids, ...frueher]; if (!alle.length) { toast('Bitte mindestens ein Wort auswählen.'); return; }
     const wk = abfrageTag(w); const opt = [];
     if (p && p.ka) opt.push('k');
+    const li = p && p.liste && listeAus(p.liste)[0]; if (li) opt.push('x' + p.liste);
     const fe = w.ferien && ferienMoeglich(p) ? p.ferien : null;
     if (fe) opt.push('f' + [datumKurz(heute < p.ab ? heute : p.ab), datumKurz(fe.bis), fe.tage, fe.extra].join('_'));
     const korr = korrekturOptionen(wk); opt.push(...korr); const ki = korrekturInfo(korr);
     const c = wochenCode(wk, w.lek, alle, w.themen, opt);
     const korrHTML = ki.schueler ? `<span class="small">Enthält deine Prüfentscheidungen (${ki.ds.join(', ')}) für ${ki.schueler} Schüler – deren Ergebnis wird beim Scannen endgültig.</span>${ki.offen ? `<span class="small" style="color:var(--err)"><b>Noch ${ki.offen} Antwort${ki.offen > 1 ? 'en' : ''} nicht geprüft.</b> Prüfe zuerst unter „Liste“ und erzeuge den Code dann neu.</span>` : ''}` : '';
-    $('#wochen-qr').innerHTML = `<div class="qr gross">${qrSvg(c)}${korrHTML}<b>${alle.length} Vokabeln · ${p && p.ka ? 'Klassenarbeit' : 'Abfrage'} am ${fmtD(wk)}</b><span class="small">${w.themen.length ? w.themen.map(t => esc(THEMEN[t].name)).join(' · ') : 'ohne Grammatik'}</span>${fe ? `<span class="small">Ferienprogramm: Wiederholung ${esc(extraText(fe.extra))} · ${fe.tage} Tage à ${CFG.zielMin} Min → +1 Punkt</span>` : ''}<span class="small muted">${frueher.length ? 'Aus früheren Lektionen: ' + frueher.map(i => esc(V[i].lat)).join(', ') : ''}</span></div>`;
+    $('#wochen-qr').innerHTML = `<div class="qr gross">${qrSvg(c)}${korrHTML}<b>${alle.length} Vokabeln · ${p && p.ka ? 'Klassenarbeit' : 'Abfrage'} am ${fmtD(wk)}</b><span class="small">${w.themen.length ? w.themen.map(t => esc(THEMEN[t].name)).join(' · ') : 'ohne Grammatik'}</span>${fe ? `<span class="small">Ferienprogramm: Wiederholung ${esc(extraText(fe.extra))} · ${fe.tage} Tage à ${CFG.zielMin} Min → +1 Punkt</span>` : ''}${li ? `<span class="small">Dazu als eigene Rubrik: ${esc(li.label)} (${li.ids.length} Wörter aus früheren Lektionen, ${esc(WDH_LISTEN[p.liste].quelle)})</span>` : ''}<span class="small muted">${frueher.length ? 'Aus früheren Lektionen: ' + frueher.map(i => esc(V[i].lat)).join(', ') : ''}</span></div>`;
   },
   lehrerScannen() { scannerOeffnen('Codes einsammeln', true, ergebnisVerarbeiten); },
   testSchueler() {
